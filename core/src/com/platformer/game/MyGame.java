@@ -8,22 +8,15 @@ import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.utils.ScreenUtils;
+import com.platformer.game.models.Platform;
 
 public class MyGame extends ApplicationAdapter {
 
     public final static int CHARACTER_WIDTH = 64;
     public final static int CHARACTER_HEIGHT = 64;
-    // Game constants
-    public final static int MAP_SIDE = 19;
-    public final static int MAP_CENTER = MAP_SIDE / 2;
     public final static int BACKGROUND_TILE_WIDTH = 16;
-    public final static int BACKGROUND_TILE_HEIGHT = 16;
-    public final static int MAP_CELL_TILE_COUNT_X = 4;
-    public final static int MAP_CELL_TILE_COUNT_Y = 3;
-    public final static int MAP_CELL_WIDTH = MAP_CELL_TILE_COUNT_X * BACKGROUND_TILE_WIDTH;
-    public final static int MAP_CELL_HEIGHT = MAP_CELL_TILE_COUNT_Y * BACKGROUND_TILE_HEIGHT;
-    private final static int PLATFORM_WIDTH = 465;
-    private final static int PLATFORM_HEIGHT = 172;
+    private final static int PLATFORM_WIDTH = 1978;
+    private final static int PLATFORM_HEIGHT = 897;
     private final float CHARACTER_SPEED = 150f;
     private final float CHARACTER_ANIM_SPEED = .1f;
     private final int DIRECTIONS = 4;
@@ -57,32 +50,42 @@ public class MyGame extends ApplicationAdapter {
 
     private Texture backgroundTexture;
 
-    @Override
-    public void create() {
+    private int anim = -1;
+    private float newPlatformHeight;
+    private float newPlatformWidth;
+
+    private Platform p;
+
+    private void loadTextures() {
         txCharacter = new Texture("character.png");
         txrCharacterTiles = TextureRegion.split(txCharacter, CHARACTER_WIDTH, CHARACTER_HEIGHT);
+        txPlatform = new Texture("platform.png");
+        txrPlatformTiles = TextureRegion.split(txPlatform, PLATFORM_WIDTH, PLATFORM_HEIGHT);
+        backgroundTexture = new Texture("background.png");
+    }
 
+    private void createAnimations() {
         animCharacter = new Animation[DIRECTIONS];
         for (int i = 0; i < animCharacter.length; i++) {
-            animCharacter[i] = new Animation<TextureRegion>(CHARACTER_ANIM_SPEED, txrCharacterTiles[i]);
+            animCharacter[i] = new Animation<>(CHARACTER_ANIM_SPEED, txrCharacterTiles[i]);
         }
 
-        txPlatform = new Texture("platforme.png");
-        txrPlatformTiles = TextureRegion.split(txPlatform, PLATFORM_WIDTH, PLATFORM_HEIGHT);
         animPlatform = new Animation[PLATFORME_FRAME];
         for (int i = 0; i < animPlatform.length; i++) {
-            animPlatform[i] = new Animation<TextureRegion>(PLATFORM_ANIM_SPEED, txrPlatformTiles[i]);
+            animPlatform[i] = new Animation<>(PLATFORM_ANIM_SPEED, txrPlatformTiles[i]);
         }
-
-        backgroundTexture = new Texture("background.png");
-
-        batch = new SpriteBatch();
     }
 
     @Override
-    public void render() {
-        ScreenUtils.clear(0, 0, 0, 1);
+    public void create() {
+        loadTextures();
+        createAnimations();
 
+        p = new Platform("platform.png", PLATFORM_WIDTH, PLATFORM_HEIGHT, 10, 25, 25);
+        batch = new SpriteBatch();
+    }
+
+    private void updateCharacter(float dt) {
         int dx = 0;
 
         if (Gdx.input.isKeyPressed(LEFT_KEY) || Gdx.input.isKeyPressed(RIGHT_KEY))
@@ -98,8 +101,7 @@ public class MyGame extends ApplicationAdapter {
             velocityY = JUMP_SPEED;
         }
 
-        int anim = -1;
-        float dt = Gdx.graphics.getDeltaTime();
+        anim = -1;
 
         // Apply gravity and fast fall force
         float gravityForce = GRAVITY;
@@ -129,51 +131,70 @@ public class MyGame extends ApplicationAdapter {
 
         time += dt;
 
-        // Update platform animation state
-        platformAnimTime += dt;
-
-        float screenWidth = Gdx.graphics.getWidth();
-        float screenHeight = Gdx.graphics.getHeight();
-
-        batch.begin();
-
-        batch.draw(backgroundTexture, 0, 0, screenWidth, screenHeight);
-
-        // Render the animated platform
-        TextureRegion txrCurrentPlatform = animPlatform[(int) (platformAnimTime / PLATFORM_ANIM_SPEED) % PLATFORME_FRAME].getKeyFrame(platformAnimTime, true);
-        float newPlatformWidth = (float) PLATFORM_WIDTH / 2;
-        float newPlatformHeight = (float) PLATFORM_HEIGHT / 2;
-        platformX = (Gdx.graphics.getWidth() - newPlatformWidth) / 2;
-        platformY = (float) Gdx.graphics.getHeight() / 2 - newPlatformHeight;
-        batch.draw(txrCurrentPlatform, platformX, platformY, newPlatformWidth, newPlatformHeight);
-
-        // Render the character
-        TextureRegion txrCharacter = anim < 0 ? txrCharacterTiles[stop][0] : animCharacter[stop = anim].getKeyFrame(time, true);
-
-        batch.draw(txrCharacter, characterX - (float) BACKGROUND_TILE_WIDTH / 2, characterY);
-
-        batch.end();
-
         // Check if the character is on the platform
         boolean isCharRightOfPlatformLeftEdge = characterX + CHARACTER_WIDTH > platformX + 20;
         boolean isCharLeftOfPlatformRightEdge = characterX < platformX + newPlatformWidth - 10;
         boolean isCharAbovePlatformBottomEdge = characterY <= platformY + newPlatformHeight;
         boolean isCharBelowPlatformTopEdge = characterY + CHARACTER_HEIGHT >= platformY;
-        boolean wasCharAbovePlatformTopEdge = characterY - Math.abs(velocityY * dt) + CHARACTER_HEIGHT < platformY;
 
-        if (isCharRightOfPlatformLeftEdge &&
-                isCharLeftOfPlatformRightEdge &&
-                isCharAbovePlatformBottomEdge &&
-                isCharBelowPlatformTopEdge &&
-                velocityY <= 0) {
+        if (isCharRightOfPlatformLeftEdge && isCharLeftOfPlatformRightEdge && isCharAbovePlatformBottomEdge && isCharBelowPlatformTopEdge && velocityY <= 0) {
             characterY = platformY + newPlatformHeight;
             isJumping = false;
             velocityY = 0;
             jumpCount = 0;
         }
 
+        if (p.isCharacterOnIt(characterX, characterY, CHARACTER_WIDTH, CHARACTER_HEIGHT)) {
+            characterY = p.getPercentToLeft() + p.getHeight();
+            isJumping = false;
+            velocityY = 0;
+            jumpCount = 0;
+        }
     }
 
+
+    private void renderBackground() {
+        float screenWidth = Gdx.graphics.getWidth();
+        float screenHeight = Gdx.graphics.getHeight();
+        batch.draw(backgroundTexture, 0, 0, screenWidth, screenHeight);
+    }
+
+    private void renderPlatformA(float dt) {
+        platformAnimTime += dt;
+        TextureRegion txrCurrentPlatform = animPlatform[(int) (platformAnimTime / PLATFORM_ANIM_SPEED) % PLATFORME_FRAME].getKeyFrame(platformAnimTime, true);
+        newPlatformWidth = (float) PLATFORM_WIDTH / 10;
+        newPlatformHeight = (float) PLATFORM_HEIGHT / 10;
+        platformX = (Gdx.graphics.getWidth() - newPlatformWidth) / 2;
+        platformY = (float) Gdx.graphics.getHeight() / 2 - newPlatformHeight;
+        batch.draw(txrCurrentPlatform, platformX, platformY, newPlatformWidth, newPlatformHeight);
+    }
+
+    private void renderPlatformB(float dt) {
+        platformAnimTime += dt;
+        p.render(batch, platformAnimTime);
+    }
+
+    private void renderCharacter() {
+        TextureRegion txrCharacter = anim < 0 ? txrCharacterTiles[stop][0] : animCharacter[stop = anim].getKeyFrame(time, true);
+        batch.draw(txrCharacter, characterX - (float) BACKGROUND_TILE_WIDTH / 2, characterY);
+    }
+
+    @Override
+    public void render() {
+        ScreenUtils.clear(0, 0, 0, 1);
+        float dt = Gdx.graphics.getDeltaTime();
+
+        updateCharacter(dt);
+
+        batch.begin();
+
+        renderBackground();
+        renderPlatformA(dt);
+        renderPlatformB(dt);
+        renderCharacter();
+
+        batch.end();
+    }
 
     @Override
     public void dispose() {

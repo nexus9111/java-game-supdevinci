@@ -75,4 +75,12 @@ public class Platform {
                 characterY >= this.percentToBottom + this.height - 5 &&
                 characterY <= this.percentToBottom + this.height + 5;
     }
+
+    public float getSpawnX(int width) {
+        return (this.percentToLeft + this.width / 2) - ((float) width / 2);
+    }
+
+    public float getSpawnY() {
+        return this.percentToBottom + this.height + 5;
+    }
 }

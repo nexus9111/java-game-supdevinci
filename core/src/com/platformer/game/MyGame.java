@@ -8,6 +8,7 @@ import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.utils.ScreenUtils;
+import com.platformer.game.models.Character;
 import com.platformer.game.models.Platform;
 
 public class MyGame extends ApplicationAdapter {
@@ -65,6 +66,13 @@ public class MyGame extends ApplicationAdapter {
         platforms[2] = new Platform("platform.png", PLATFORM_WIDTH, PLATFORM_HEIGHT, 10, 25, 75);
         platforms[3] = new Platform("platform.png", PLATFORM_WIDTH, PLATFORM_HEIGHT, 10, 75, 75);
         platforms[4] = new Platform("platform.png", PLATFORM_WIDTH, PLATFORM_HEIGHT, 10, 75, 25);
+
+        int random = (int) (Math.random() * 5);
+        characterX = platforms[random].getSpawnX(CHARACTER_WIDTH);
+        characterY = platforms[random].getSpawnY();
+
+        Character c = new Character("character.png", CHARACTER_WIDTH, CHARACTER_HEIGHT, CHARACTER_SPEED, CHARACTER_ANIM_SPEED, characterX, characterY, DIRECTIONS);
+
         batch = new SpriteBatch();
     }
 
@@ -115,7 +123,6 @@ public class MyGame extends ApplicationAdapter {
         time += dt;
 
         boolean isGoingDown = velocityY < 0;
-
         for (Platform p : platforms) {
             if (p.isCharacterOnIt(characterX, characterY, CHARACTER_WIDTH, CHARACTER_HEIGHT) && isGoingDown) {
                 characterY = p.getPercentToBottom() + p.getHeight();

@@ -20,47 +20,32 @@ public class MyGame extends ApplicationAdapter {
     private final float CHARACTER_SPEED = 150f;
     private final float CHARACTER_ANIM_SPEED = .1f;
     private final int DIRECTIONS = 4;
-    private final int PLATFORME_FRAME = 5;
     private final float GRAVITY = -300f;
     private final float JUMP_SPEED = 300f;
     private final float FAST_FALL_FORCE = -10_000f;
-
     private final int LEFT_KEY = Input.Keys.LEFT;
     private final int RIGHT_KEY = Input.Keys.RIGHT;
     private final int UP_KEY = Input.Keys.UP;
     private final int DOWN_KEY = Input.Keys.DOWN;
-    private final float PLATFORM_ANIM_SPEED = .3f;
     private final int MAX_JUMP_COUNT = 2;
+    private final Platform[] platforms = new Platform[5];
     SpriteBatch batch;
-    Texture img;
     private Texture txCharacter;
     private TextureRegion[][] txrCharacterTiles;
     private Animation<TextureRegion>[] animCharacter;
-    private Animation<TextureRegion>[] animPlatform;
     private float characterX, characterY;
     private int stop = 0;
     private float velocityY = 0;
     private boolean isJumping = false;
     private float time = .0f;
-    private Texture txPlatform;
-    private TextureRegion[][] txrPlatformTiles;
-    private float platformX, platformY;
-    private float platformAnimTime = 0f;
     private int jumpCount = 0;
-
+    private float platformAnimTime = 0f;
     private Texture backgroundTexture;
-
     private int anim = -1;
-    private float newPlatformHeight;
-    private float newPlatformWidth;
-
-    private Platform p;
 
     private void loadTextures() {
         txCharacter = new Texture("character.png");
         txrCharacterTiles = TextureRegion.split(txCharacter, CHARACTER_WIDTH, CHARACTER_HEIGHT);
-        txPlatform = new Texture("platform.png");
-        txrPlatformTiles = TextureRegion.split(txPlatform, PLATFORM_WIDTH, PLATFORM_HEIGHT);
         backgroundTexture = new Texture("background.png");
     }
 
@@ -69,19 +54,17 @@ public class MyGame extends ApplicationAdapter {
         for (int i = 0; i < animCharacter.length; i++) {
             animCharacter[i] = new Animation<>(CHARACTER_ANIM_SPEED, txrCharacterTiles[i]);
         }
-
-        animPlatform = new Animation[PLATFORME_FRAME];
-        for (int i = 0; i < animPlatform.length; i++) {
-            animPlatform[i] = new Animation<>(PLATFORM_ANIM_SPEED, txrPlatformTiles[i]);
-        }
     }
 
     @Override
     public void create() {
         loadTextures();
         createAnimations();
-
-        p = new Platform("platform.png", PLATFORM_WIDTH, PLATFORM_HEIGHT, 10, 25, 25);
+        platforms[0] = new Platform("platform.png", PLATFORM_WIDTH, PLATFORM_HEIGHT, 10, 25, 25);
+        platforms[1] = new Platform("platform.png", PLATFORM_WIDTH, PLATFORM_HEIGHT, 6, 50, 50);
+        platforms[2] = new Platform("platform.png", PLATFORM_WIDTH, PLATFORM_HEIGHT, 10, 25, 75);
+        platforms[3] = new Platform("platform.png", PLATFORM_WIDTH, PLATFORM_HEIGHT, 10, 75, 75);
+        platforms[4] = new Platform("platform.png", PLATFORM_WIDTH, PLATFORM_HEIGHT, 10, 75, 25);
         batch = new SpriteBatch();
     }
 
@@ -131,24 +114,15 @@ public class MyGame extends ApplicationAdapter {
 
         time += dt;
 
-        // Check if the character is on the platform
-        boolean isCharRightOfPlatformLeftEdge = characterX + CHARACTER_WIDTH > platformX + 20;
-        boolean isCharLeftOfPlatformRightEdge = characterX < platformX + newPlatformWidth - 10;
-        boolean isCharAbovePlatformBottomEdge = characterY <= platformY + newPlatformHeight;
-        boolean isCharBelowPlatformTopEdge = characterY + CHARACTER_HEIGHT >= platformY;
+        boolean isGoingDown = velocityY < 0;
 
-        if (isCharRightOfPlatformLeftEdge && isCharLeftOfPlatformRightEdge && isCharAbovePlatformBottomEdge && isCharBelowPlatformTopEdge && velocityY <= 0) {
-            characterY = platformY + newPlatformHeight;
-            isJumping = false;
-            velocityY = 0;
-            jumpCount = 0;
-        }
-
-        if (p.isCharacterOnIt(characterX, characterY, CHARACTER_WIDTH, CHARACTER_HEIGHT)) {
-            characterY = p.getPercentToLeft() + p.getHeight();
-            isJumping = false;
-            velocityY = 0;
-            jumpCount = 0;
+        for (Platform p : platforms) {
+            if (p.isCharacterOnIt(characterX, characterY, CHARACTER_WIDTH, CHARACTER_HEIGHT) && isGoingDown) {
+                characterY = p.getPercentToBottom() + p.getHeight();
+                isJumping = false;
+                velocityY = 0;
+                jumpCount = 0;
+            }
         }
     }
 
@@ -159,19 +133,11 @@ public class MyGame extends ApplicationAdapter {
         batch.draw(backgroundTexture, 0, 0, screenWidth, screenHeight);
     }
 
-    private void renderPlatformA(float dt) {
+    private void renderPlatforms(float dt) {
         platformAnimTime += dt;
-        TextureRegion txrCurrentPlatform = animPlatform[(int) (platformAnimTime / PLATFORM_ANIM_SPEED) % PLATFORME_FRAME].getKeyFrame(platformAnimTime, true);
-        newPlatformWidth = (float) PLATFORM_WIDTH / 10;
-        newPlatformHeight = (float) PLATFORM_HEIGHT / 10;
-        platformX = (Gdx.graphics.getWidth() - newPlatformWidth) / 2;
-        platformY = (float) Gdx.graphics.getHeight() / 2 - newPlatformHeight;
-        batch.draw(txrCurrentPlatform, platformX, platformY, newPlatformWidth, newPlatformHeight);
-    }
-
-    private void renderPlatformB(float dt) {
-        platformAnimTime += dt;
-        p.render(batch, platformAnimTime);
+        for (Platform p : platforms) {
+            p.render(batch, platformAnimTime);
+        }
     }
 
     private void renderCharacter() {
@@ -189,8 +155,7 @@ public class MyGame extends ApplicationAdapter {
         batch.begin();
 
         renderBackground();
-        renderPlatformA(dt);
-        renderPlatformB(dt);
+        renderPlatforms(dt);
         renderCharacter();
 
         batch.end();
@@ -199,7 +164,6 @@ public class MyGame extends ApplicationAdapter {
     @Override
     public void dispose() {
         batch.dispose();
-        img.dispose();
         backgroundTexture.dispose();
     }
 }

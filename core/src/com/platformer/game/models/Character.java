@@ -10,6 +10,7 @@ import java.util.Iterator;
 import java.util.List;
 
 public class Character {
+    private final int MAX_PROJECTILES = 5;
     private final Texture txCharacter;
     private final TextureRegion[][] txrCharacterTiles;
     private final Animation<TextureRegion>[] animCharacter;
@@ -145,7 +146,7 @@ public class Character {
             velocityY = JUMP_SPEED;
         }
 
-        if (Gdx.input.isKeyJustPressed(this.shootKey)) {
+        if (Gdx.input.isKeyJustPressed(this.shootKey) && getAvailableProjectiles() > 0) {
             projectiles.add(new Projectile(
                     this,
                     45,
@@ -268,5 +269,9 @@ public class Character {
 
     public int getOffsetX() {
         return offsetX;
+    }
+
+    public int getAvailableProjectiles() {
+        return MAX_PROJECTILES - projectiles.size();
     }
 }

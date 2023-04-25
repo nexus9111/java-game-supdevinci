@@ -54,4 +54,16 @@ public class Projectile {
     public boolean isOut(float bgWidth) {
         return this.x < 0 || this.x > bgWidth;
     }
+
+    public boolean isLeft() {
+        return this.isLeft;
+    }
+
+    public float getWidth() {
+        return width;
+    }
+
+    public float getHeight() {
+        return height;
+    }
 }

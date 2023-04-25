@@ -18,6 +18,7 @@ public class States {
         List<Character> charactersHitByProjectile = new java.util.ArrayList<Character>();
         List<Projectile> projectilesToRemove = new java.util.ArrayList<Projectile>();
 
+        // kill characters hit by projectile
         for (Projectile projectile : this.projectiles) {
             for (Character character : this.characters) {
                 if (projectile.getX() >= character.getDistanceToLeft() &&
@@ -31,8 +32,28 @@ public class States {
             }
         }
 
-        for (Projectile projectile : projectilesToRemove) {
-            for (Character character : this.characters) {
+        // if two projectiles hit together, remove them both
+        for (Projectile projectile : this.projectiles) {
+            for (Projectile projectile2 : this.projectiles) {
+                if (projectile != projectile2 &&
+                        projectile.getX() <= projectile2.getX() + projectile2.getWidth() &&
+                        projectile.getX() >= projectile2.getX() &&
+                        projectile.getY() <= projectile2.getY() + projectile2.getHeight() &&
+                        projectile.getY() >= projectile2.getY() &&
+                        projectile.isLeft() != projectile2.isLeft()) {
+                    if (!projectilesToRemove.contains(projectile)) {
+                        projectilesToRemove.add(projectile);
+                    }
+                    if (!projectilesToRemove.contains(projectile2)) {
+                        projectilesToRemove.add(projectile2);
+                    }
+                }
+            }
+        }
+
+        // remove projectiles used
+        for (Character character : this.characters) {
+            for (Projectile projectile : projectilesToRemove) {
                 if (character.hasProjectile(projectile)) {
                     character.removeProjectile(projectile);
                 }

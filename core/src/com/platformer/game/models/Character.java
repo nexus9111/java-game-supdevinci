@@ -28,7 +28,6 @@ public class Character {
     private final int downKey;
     private final int shootKey;
     private final int DIRECTIONS = 4;
-    private final String PROJECTILE_FILE_NAME = "projectile.png";
     private final int offsetX;
     private final int offsetY;
     private float distanceToLeft;
@@ -40,7 +39,7 @@ public class Character {
     private int anim = -1;
     private int stop = 0;
     private boolean isLeft = true;
-    private final List<Projectile> projectiles = new java.util.ArrayList<Projectile>();
+    private final List<Projectile> projectiles = new java.util.ArrayList<>();
     private int lives = 5;
 
     private final String projectileFile;
@@ -170,7 +169,7 @@ public class Character {
 
         // Check if the character is on the ground
         if (distanceToBottom <= 0) {
-            this.distanceToBottom = 0;
+            // this.distanceToBottom = 0;
             isJumping = false;
             jumpCount = 0;
             velocityY = 0;

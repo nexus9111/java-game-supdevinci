@@ -19,9 +19,9 @@ public class Character {
     private final float speed;
     private final float animationSpeed;
     private final int MAX_JUMP_COUNT = 2;
-    private final float GRAVITY = -300f;
-    private final float JUMP_SPEED = 300f;
-    private final float FAST_FALL_FORCE = -8_000f;
+    private final float GRAVITY = -800f;
+    private final float JUMP_SPEED = 550f;
+    private final float FAST_FALL_FORCE = -4_000f;
     private final int jumpKey;
     private final int leftKey;
     private final int rightKey;
@@ -151,7 +151,7 @@ public class Character {
                     this,
                     45,
                     37,
-                    300f,
+                    500f,
                     this.isLeft,
                     this.projectileFile
             ));
@@ -161,8 +161,10 @@ public class Character {
 
         // Apply gravity and fast fall force
         float gravityForce = GRAVITY;
+        boolean fastFallUsed = false;
         if (isJumping && Gdx.input.isKeyPressed(this.downKey)) {
             gravityForce += FAST_FALL_FORCE;
+            fastFallUsed = true;
         }
         velocityY += gravityForce * dt;
         this.distanceToBottom += velocityY * dt;
@@ -189,7 +191,7 @@ public class Character {
 
         boolean isGoingDown = velocityY < 0;
         for (Platform p : platforms) {
-            if (p.isCharacterOnIt(distanceToLeft, distanceToBottom, this.width + this.offsetX, this.height - this.offsetY) && isGoingDown) {
+            if (p.isCharacterOnIt(distanceToLeft, distanceToBottom, this.width + this.offsetX, this.height - this.offsetY) && (isGoingDown || fastFallUsed)) {
                 this.distanceToBottom = p.getPercentToBottom() + p.getHeight();
                 isJumping = false;
                 velocityY = 0;

@@ -73,8 +73,8 @@ public class Platform {
     public boolean isCharacterOnIt(float characterX, float characterY, float characterWidth, float characterHeight) {
         return characterX + (characterWidth / 2) > this.percentToLeft &&
                 characterX < this.percentToLeft + this.width &&
-                characterY >= this.percentToBottom + this.height - 5 &&
-                characterY <= this.percentToBottom + this.height + 5;
+                characterY >= this.percentToBottom + this.height - 8 &&
+                characterY <= this.percentToBottom + this.height + 8;
     }
 
     public float getSpawnX(int width) {

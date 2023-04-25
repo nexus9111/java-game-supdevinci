@@ -57,8 +57,10 @@ public class MyGame extends ApplicationAdapter {
                 Input.Keys.A,
                 Input.Keys.D,
                 Input.Keys.S,
+                Input.Keys.SPACE,
                 -20,
-                0);
+                0,
+                "projectile2.png");
 
         int random1 = (int) (Math.random() * 5);
         characters[0].setSpawn(platforms[random1].getSpawnX(CHARACTER_WIDTH), platforms[random1].getSpawnY());
@@ -75,8 +77,10 @@ public class MyGame extends ApplicationAdapter {
                 Input.Keys.LEFT,
                 Input.Keys.RIGHT,
                 Input.Keys.DOWN,
+                Input.Keys.ALT_RIGHT,
                 0,
-                0);
+                0,
+                "projectile.png");
 
         int random2 = (int) (Math.random() * 5);
         while (random1 == random2) {
@@ -111,7 +115,7 @@ public class MyGame extends ApplicationAdapter {
 
     private void renderCharacters() {
         for (Character c : characters) {
-            c.render(batch, BACKGROUND_TILE_WIDTH);
+            c.render(batch, Gdx.graphics.getWidth());
         }
     }
 

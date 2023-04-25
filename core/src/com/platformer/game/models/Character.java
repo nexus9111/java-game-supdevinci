@@ -1,10 +1,14 @@
 package com.platformer.game.models;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+
+import java.util.Iterator;
+import java.util.List;
 
 public class Character {
     private final Texture txCharacter;
@@ -15,13 +19,18 @@ public class Character {
     private final float speed;
     private final float animationSpeed;
     private final int MAX_JUMP_COUNT = 2;
-    private final float GRAVITY = -300f;
-    private final float JUMP_SPEED = 300f;
-    private final float FAST_FALL_FORCE = -10_000f;
+    private final float GRAVITY = -1000f;
+    private final float JUMP_SPEED = 500f;
+    private final float FAST_FALL_FORCE = -8_000f;
     private final int jumpKey;
     private final int leftKey;
     private final int rightKey;
     private final int downKey;
+    private final int shootKey;
+    private final int DIRECTIONS = 4;
+    private final String PROJECTILE_FILE_NAME = "projectile.png";
+    private final int offsetX;
+    private final int offsetY;
     private float distanceToLeft;
     private float distanceToBottom;
     private float velocityY = 0;
@@ -30,10 +39,9 @@ public class Character {
     private int jumpCount = 0;
     private int anim = -1;
     private int stop = 0;
-    private int offsetX;
-    private int offsetY;
-    private final int DIRECTIONS = 4;
-    private final String PROJECTILE_FILE_NAME = "projectile.png";
+    private boolean isLeft = false;
+    private List<Projectile> projectiles = new java.util.ArrayList<Projectile>();
+    private String projectileFile;
 
     /**
      * Constructs a Character object.
@@ -50,6 +58,7 @@ public class Character {
      * @param leftKey                 the key to move left
      * @param rightKey                the key to move right
      * @param downKey                 the key to move down
+     * @param shootKey                 the key to shoot
      * @param offsetX                 the offset of the character in the x direction (the weight reduction or increase in case of character oversized background).
      *                                Set to 0 if you don't want to change the weight of the character
      * @param offsetY                 the offset of the character in the y direction (the height reduction or increase in case of character oversized background)
@@ -69,8 +78,10 @@ public class Character {
             int leftKey,
             int rightKey,
             int downKey,
+            int shootKey,
             int offsetX,
-            int offsetY
+            int offsetY,
+            String projectileFile
     ) {
         if (fileName == null) {
             throw new IllegalArgumentException("fileName cannot be null");
@@ -90,8 +101,10 @@ public class Character {
         this.leftKey = leftKey;
         this.rightKey = rightKey;
         this.downKey = downKey;
+        this.shootKey = shootKey;
         this.offsetX = offsetX;
         this.offsetY = offsetY;
+        this.projectileFile = projectileFile;
 
         this.txCharacter = new Texture(fileName);
         this.txrCharacterTiles = TextureRegion.split(this.txCharacter, characterWidth, characterHeight);
@@ -102,11 +115,25 @@ public class Character {
         }
     }
 
+    public float getDistanceToLeft() {
+        return distanceToLeft;
+    }
+
+    public float getDistanceToBottom() {
+        return distanceToBottom;
+    }
+
     private void updateCharacter(float dt, Platform[] platforms) {
         int dx = 0;
 
         if (Gdx.input.isKeyPressed(this.leftKey) || Gdx.input.isKeyPressed(this.rightKey))
-            dx = Gdx.input.isKeyPressed(this.leftKey) ? -1 : 1;
+            if (Gdx.input.isKeyPressed(this.leftKey)) {
+                this.isLeft = true;
+                dx += -1;
+            } else {
+                this.isLeft = false;
+                dx += 1;
+            }
 
         if (jumpCount < MAX_JUMP_COUNT && Gdx.input.isKeyJustPressed(this.jumpKey)) {
             if (isJumping) {
@@ -116,6 +143,17 @@ public class Character {
                 jumpCount = 1;
             }
             velocityY = JUMP_SPEED;
+        }
+
+        if (Gdx.input.isKeyJustPressed(this.shootKey)) {
+            projectiles.add(new Projectile(
+                    this,
+                    45,
+                    37,
+                    300f,
+                    this.isLeft,
+                    this.projectileFile
+            ));
         }
 
         anim = -1;
@@ -157,15 +195,28 @@ public class Character {
                 jumpCount = 0;
             }
         }
+
+        for (Projectile p : projectiles) {
+            p.update(dt);
+        }
     }
 
-    private void renderCharacter(SpriteBatch batch, float bgWidth) {
+    private void renderCharacter(SpriteBatch batch) {
         TextureRegion txrCharacter = anim < 0 ? txrCharacterTiles[stop][0] : animCharacter[stop = anim].getKeyFrame(this.time, true);
-        batch.draw(txrCharacter, this.distanceToLeft - bgWidth / 2, this.distanceToBottom, this.width, this.height);
+        batch.draw(txrCharacter, this.distanceToLeft - 20, this.distanceToBottom, this.width, this.height);
     }
 
-    public void render(SpriteBatch batch, float bgWidth) {
-        renderCharacter(batch, bgWidth);
+    public void render(SpriteBatch batch, float size) {
+        renderCharacter(batch);
+        Iterator<Projectile> iterator = projectiles.iterator();
+        while (iterator.hasNext()) {
+            Projectile p = iterator.next();
+            if (p.isOut(size)) {
+                iterator.remove();
+            } else {
+                p.render(batch);
+            }
+        }
     }
 
     public void update(float dt, Platform[] platforms) {

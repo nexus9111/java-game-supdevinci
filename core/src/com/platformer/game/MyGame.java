@@ -9,6 +9,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.platformer.game.models.Character;
+import com.platformer.game.models.GifDecoder;
 import com.platformer.game.models.Platform;
 
 public class MyGame extends ApplicationAdapter {
@@ -28,6 +29,8 @@ public class MyGame extends ApplicationAdapter {
     private float characterX, characterY;
     private float platformAnimTime = 0f;
     private Texture backgroundTexture;
+    Animation<TextureRegion> c;
+    float elapsed;
 
     private void loadTextures() {
         backgroundTexture = new Texture("background1.png");
@@ -54,24 +57,26 @@ public class MyGame extends ApplicationAdapter {
                 Input.Keys.A,
                 Input.Keys.D,
                 Input.Keys.S,
-                4, -20, 0);
+                -20,
+                0);
 
         int random1 = (int) (Math.random() * 5);
         characters[0].setSpawn(platforms[random1].getSpawnX(CHARACTER_WIDTH), platforms[random1].getSpawnY());
 
         characters[1] = new Character("character2.png",
-                100,
-                70,
+                80,
+                60,
                 CHARACTER_SPEED,
                 CHARACTER_ANIM_SPEED,
                 characterX,
                 characterY,
-                3,
+                0.8,
                 Input.Keys.UP,
                 Input.Keys.LEFT,
                 Input.Keys.RIGHT,
                 Input.Keys.DOWN,
-                1, 0, 0);
+                0,
+                0);
 
         int random2 = (int) (Math.random() * 5);
         while (random1 == random2) {
@@ -80,12 +85,15 @@ public class MyGame extends ApplicationAdapter {
         characters[1].setSpawn(platforms[random2].getSpawnX(CHARACTER_WIDTH), platforms[random2].getSpawnY());
 
         batch = new SpriteBatch();
+        c = GifDecoder.loadGIFAnimation(Animation.PlayMode.LOOP, Gdx.files.internal("background2.gif").read());
     }
 
-    private void renderBackground() {
+    private void renderBackground(float dt) {
+        elapsed += dt * 0.5;
         float screenWidth = Gdx.graphics.getWidth();
         float screenHeight = Gdx.graphics.getHeight();
-        batch.draw(backgroundTexture, 0, 0, screenWidth, screenHeight);
+        batch.draw(c.getKeyFrame(elapsed), 0f, 0f, screenWidth, screenHeight);
+        // batch.draw(backgroundTexture, 0, 0, screenWidth, screenHeight);
     }
 
     private void renderPlatforms(float dt) {
@@ -116,7 +124,8 @@ public class MyGame extends ApplicationAdapter {
 
         batch.begin();
 
-        renderBackground();
+        renderBackground(dt);
+        // batch.draw(c.getKeyFrame(elapsed), 20.0f, 20.0f);
         renderPlatforms(dt);
         renderCharacters();
 

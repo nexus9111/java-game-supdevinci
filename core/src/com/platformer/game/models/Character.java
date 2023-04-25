@@ -10,38 +10,82 @@ public class Character {
     private final Texture txCharacter;
     private final TextureRegion[][] txrCharacterTiles;
     private final Animation<TextureRegion>[] animCharacter;
-    private final int characterWidth;
-    private final int characterHeight;
-    private final float characterSpeed;
-    private final float characterAnimationSpeed;
+    private final int width;
+    private final int height;
+    private final float speed;
+    private final float animationSpeed;
     private final int MAX_JUMP_COUNT = 2;
     private final float GRAVITY = -300f;
     private final float JUMP_SPEED = 300f;
     private final float FAST_FALL_FORCE = -10_000f;
-    private final int directions;
     private final int jumpKey;
     private final int leftKey;
     private final int rightKey;
     private final int downKey;
-    private float characterX;
-    private float characterY;
+    private float distanceToLeft;
+    private float distanceToBottom;
     private float velocityY = 0;
     private boolean isJumping = false;
     private float time = .0f;
     private int jumpCount = 0;
     private int anim = -1;
     private int stop = 0;
-    private int offsetX = 0;
-    private int offsetY = 0;
+    private int offsetX;
+    private int offsetY;
+    private final int DIRECTIONS = 4;
+    private final String PROJECTILE_FILE_NAME = "projectile.png";
 
-    public Character(String fileName, int characterWidth, int characterHeight, float characterSpeed, float characterAnimationSpeed, float characterX, float characterY, int directions, int jumpKey, int leftKey, int rightKey, int downKey, float scale, int offsetX, int offsetY) {
-        this.characterWidth = (int) (characterWidth / scale);
-        this.characterHeight = (int) (characterHeight / scale);
-        this.characterSpeed = characterSpeed;
-        this.characterAnimationSpeed = characterAnimationSpeed;
-        this.characterX = characterX;
-        this.characterY = characterY;
-        this.directions = directions;
+    /**
+     * Constructs a Character object.
+     *
+     * @param fileName                the file name of the texture
+     * @param characterWidth          the width of the character in pixels (in the source image)
+     * @param characterHeight         the height of the character in pixels (in the source image)
+     * @param characterSpeed          the speed of the character
+     * @param characterAnimationSpeed the speed of the character animation
+     * @param percentToLeft           the percentage of the screen to place the character from the left
+     * @param percentToBottom         the percentage of the screen to place the character from the bottom
+     * @param scale                   the scale of the character (the size will be divided by this number)
+     * @param jumpKey                 the key to jump
+     * @param leftKey                 the key to move left
+     * @param rightKey                the key to move right
+     * @param downKey                 the key to move down
+     * @param offsetX                 the offset of the character in the x direction (the weight reduction or increase in case of character oversized background).
+     *                                Set to 0 if you don't want to change the weight of the character
+     * @param offsetY                 the offset of the character in the y direction (the height reduction or increase in case of character oversized background)
+     *                                Set to 0 if you don't want to change the weight of the character
+     * @throws IllegalArgumentException if fileName is null, or if width, height, scale, percentToBottom, or percentToLeft is less than 0
+     */
+    public Character(
+            String fileName,
+            int characterWidth,
+            int characterHeight,
+            float characterSpeed,
+            float characterAnimationSpeed,
+            float percentToLeft,
+            float percentToBottom,
+            double scale,
+            int jumpKey,
+            int leftKey,
+            int rightKey,
+            int downKey,
+            int offsetX,
+            int offsetY
+    ) {
+        if (fileName == null) {
+            throw new IllegalArgumentException("fileName cannot be null");
+        }
+
+        if (characterWidth <= 0 || characterHeight <= 0 || scale <= 0 || percentToBottom < 0 || percentToLeft < 0) {
+            throw new IllegalArgumentException("width, height, scale, percentToBottom, percentToLeft cannot be less than 0");
+        }
+
+        this.width = (int) (characterWidth / scale);
+        this.height = (int) (characterHeight / scale);
+        this.speed = characterSpeed;
+        this.animationSpeed = characterAnimationSpeed;
+        this.distanceToLeft = percentToLeft;
+        this.distanceToBottom = percentToBottom;
         this.jumpKey = jumpKey;
         this.leftKey = leftKey;
         this.rightKey = rightKey;
@@ -52,9 +96,9 @@ public class Character {
         this.txCharacter = new Texture(fileName);
         this.txrCharacterTiles = TextureRegion.split(this.txCharacter, characterWidth, characterHeight);
 
-        this.animCharacter = new Animation[this.directions];
+        this.animCharacter = new Animation[DIRECTIONS];
         for (int i = 0; i < this.animCharacter.length; i++) {
-            this.animCharacter[i] = new Animation<>(this.characterAnimationSpeed, this.txrCharacterTiles[i]);
+            this.animCharacter[i] = new Animation<>(this.animationSpeed, this.txrCharacterTiles[i]);
         }
     }
 
@@ -82,18 +126,18 @@ public class Character {
             gravityForce += FAST_FALL_FORCE;
         }
         velocityY += gravityForce * dt;
-        this.characterY += velocityY * dt;
+        this.distanceToBottom += velocityY * dt;
 
         // Check if the character is on the ground
-        if (characterY <= 0) {
-            this.characterY = 0;
+        if (distanceToBottom <= 0) {
+            this.distanceToBottom = 0;
             isJumping = false;
             jumpCount = 0;
             velocityY = 0;
         }
 
         // Update character's horizontal position
-        characterX += dx * this.characterSpeed * dt;
+        distanceToLeft += dx * this.speed * dt;
 
         // Determine animation index
         if (dx < 0) {
@@ -106,8 +150,8 @@ public class Character {
 
         boolean isGoingDown = velocityY < 0;
         for (Platform p : platforms) {
-            if (p.isCharacterOnIt(characterX, characterY, this.characterWidth + this.offsetX, this.characterHeight - this.offsetY) && isGoingDown) {
-                this.characterY = p.getPercentToBottom() + p.getHeight();
+            if (p.isCharacterOnIt(distanceToLeft, distanceToBottom, this.width + this.offsetX, this.height - this.offsetY) && isGoingDown) {
+                this.distanceToBottom = p.getPercentToBottom() + p.getHeight();
                 isJumping = false;
                 velocityY = 0;
                 jumpCount = 0;
@@ -117,20 +161,19 @@ public class Character {
 
     private void renderCharacter(SpriteBatch batch, float bgWidth) {
         TextureRegion txrCharacter = anim < 0 ? txrCharacterTiles[stop][0] : animCharacter[stop = anim].getKeyFrame(this.time, true);
-        batch.draw(txrCharacter, this.characterX - bgWidth / 2, this.characterY, this.characterWidth, this.characterHeight);
+        batch.draw(txrCharacter, this.distanceToLeft - bgWidth / 2, this.distanceToBottom, this.width, this.height);
     }
 
     public void render(SpriteBatch batch, float bgWidth) {
         renderCharacter(batch, bgWidth);
     }
 
-    public void update (float dt, Platform[] platforms) {
+    public void update(float dt, Platform[] platforms) {
         updateCharacter(dt, platforms);
     }
 
     public void setSpawn(float x, float y) {
-        this.characterX = x;
-        this.characterY = y;
+        this.distanceToLeft = x;
+        this.distanceToBottom = y;
     }
-
 }

@@ -82,6 +82,6 @@ public class Platform {
     }
 
     public float getSpawnY() {
-        return this.percentToBottom + this.height + 5;
+        return this.percentToBottom + this.height;
     }
 }

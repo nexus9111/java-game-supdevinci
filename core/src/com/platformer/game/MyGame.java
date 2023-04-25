@@ -9,22 +9,18 @@ import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.badlogic.gdx.utils.ScreenUtils;
-import com.platformer.game.models.Character;
-import com.platformer.game.models.GifDecoder;
-import com.platformer.game.models.Platform;
-import com.platformer.game.models.States;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton.TextButtonStyle;
-import com.badlogic.gdx.scenes.scene2d.Actor;
-import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
+import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
-import com.badlogic.gdx.scenes.scene2d.ui.Skin;
-import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
-import com.badlogic.gdx.scenes.scene2d.ui.TextButton.TextButtonStyle;
+import com.platformer.game.models.Character;
+import com.platformer.game.models.GifDecoder;
+import com.platformer.game.models.Platform;
+import com.platformer.game.models.States;
 
 
 public class MyGame extends ApplicationAdapter {
@@ -40,22 +36,25 @@ public class MyGame extends ApplicationAdapter {
     private final Platform[] platforms = new Platform[5];
     private final Character[] characters = new Character[2];
     SpriteBatch batch;
-    Animation<TextureRegion> c;
+    Animation<TextureRegion> dynamiqueBackground;
     float elapsed;
     private States state;
     private Animation<TextureRegion>[] animCharacter;
     private float characterX, characterY;
     private float platformAnimTime = 0f;
-    private Texture backgroundTexture;
+    private Texture menuButtonShape;
+    private Texture player1controls;
+    private Texture player2controls;
     private Stage stage;
     private Skin skin;
     private TextButton playButton;
     private boolean gameStarted;
 
 
-
     private void loadTextures() {
-        backgroundTexture = new Texture("background1.png");
+        menuButtonShape = new Texture("buttonshape.png");
+        player1controls = new Texture("player1.png");
+        player2controls = new Texture("player2.png");
     }
 
     @Override
@@ -110,12 +109,62 @@ public class MyGame extends ApplicationAdapter {
         }
         characters[1].setSpawn(platforms[random2].getSpawnX(CHARACTER_WIDTH), platforms[random2].getSpawnY());
         batch = new SpriteBatch();
-        c = GifDecoder.loadGIFAnimation(Animation.PlayMode.LOOP, Gdx.files.internal("background2.gif").read());
+        dynamiqueBackground = GifDecoder.loadGIFAnimation(Animation.PlayMode.LOOP, Gdx.files.internal("background2.gif").read());
 
         stage = new Stage(new ScreenViewport());
         createPlayButton();
 
         Gdx.input.setInputProcessor(stage);
+    }
+
+    private void resetCharacters() {
+        characters[0] = new Character("character1.png",
+                420,
+                360,
+                CHARACTER_SPEED,
+                CHARACTER_ANIM_SPEED,
+                characterX,
+                characterY,
+                4,
+                Input.Keys.W,
+                Input.Keys.A,
+                Input.Keys.D,
+                Input.Keys.S,
+                Input.Keys.SPACE,
+                -30,
+                0,
+                "projectile2.png");
+
+        int random1 = (int) (Math.random() * 5);
+        characters[0].setSpawn(platforms[random1].getSpawnX(CHARACTER_WIDTH), platforms[random1].getSpawnY());
+
+        characters[1] = new Character("character2.png",
+                80,
+                60,
+                CHARACTER_SPEED,
+                CHARACTER_ANIM_SPEED,
+                characterX,
+                characterY,
+                0.8,
+                Input.Keys.UP,
+                Input.Keys.LEFT,
+                Input.Keys.RIGHT,
+                Input.Keys.DOWN,
+                Input.Keys.ALT_RIGHT,
+                0,
+                0,
+                "projectile.png");
+
+        int random2 = (int) (Math.random() * 5);
+        while (random1 == random2) {
+            random2 = (int) (Math.random() * 5);
+        }
+        characters[1].setSpawn(platforms[random2].getSpawnX(CHARACTER_WIDTH), platforms[random2].getSpawnY());
+    }
+
+    private void reset() {
+        resetCharacters();
+        createPlayButton();
     }
 
     private void createPlayButton() {
@@ -136,6 +185,7 @@ public class MyGame extends ApplicationAdapter {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 gameStarted = true;
+                reset();
                 playButton.remove();
             }
         });
@@ -144,13 +194,30 @@ public class MyGame extends ApplicationAdapter {
     }
 
 
-
     private void renderBackground(float dt) {
         elapsed += dt * 0.5;
         float screenWidth = Gdx.graphics.getWidth();
         float screenHeight = Gdx.graphics.getHeight();
-        batch.draw(c.getKeyFrame(elapsed), 0f, 0f, screenWidth, screenHeight);
-        // batch.draw(backgroundTexture, 0, 0, screenWidth, screenHeight);
+        batch.draw(dynamiqueBackground.getKeyFrame(elapsed), 0f, 0f, screenWidth, screenHeight);
+    }
+
+    private void renderBackgroundMenu(float dt) {
+        renderBackground(dt);
+        float height = (float) menuButtonShape.getHeight() / 8;
+        float width = (float) menuButtonShape.getWidth() / 8;
+        batch.draw(menuButtonShape,
+                ((float) Gdx.graphics.getWidth() / 2) - (width / 2),
+                ((float) Gdx.graphics.getHeight() / 2) - (height / 2), width, height);
+
+        height = (float) player1controls.getHeight() * 3;
+        width = (float) player1controls.getWidth() * 3;
+        batch.draw(player1controls,
+                30, Gdx.graphics.getHeight() - height - 30, width, height);
+
+        height = (float) player2controls.getHeight() * 3;
+        width = (float) player2controls.getWidth() * 3;
+        batch.draw(player2controls,
+                Gdx.graphics.getWidth() - width - 30, Gdx.graphics.getHeight() - height - 30, width, height);
     }
 
     private void renderPlatforms(float dt) {
@@ -167,6 +234,11 @@ public class MyGame extends ApplicationAdapter {
         state = new States(characters);
         for (Character hc : state.getCharactersHitByProjectile()) {
             int random1 = (int) (Math.random() * 5);
+            hc.kill();
+            if (hc.getLives() <= 0) {
+                gameStarted = false;
+                return;
+            }
             hc.setSpawn(platforms[random1].getSpawnX(CHARACTER_WIDTH), platforms[random1].getSpawnY());
         }
     }
@@ -194,7 +266,7 @@ public class MyGame extends ApplicationAdapter {
             batch.end();
         } else {
             batch.begin();
-            renderBackground(dt);
+            renderBackgroundMenu(dt);
             batch.end();
             stage.act(dt);
             stage.draw();
@@ -204,8 +276,8 @@ public class MyGame extends ApplicationAdapter {
     @Override
     public void dispose() {
         batch.dispose();
-        backgroundTexture.dispose();
         stage.dispose();
         skin.dispose();
+        menuButtonShape.dispose();
     }
 }

@@ -41,6 +41,7 @@ public class Character {
     private int stop = 0;
     private boolean isLeft = true;
     private final List<Projectile> projectiles = new java.util.ArrayList<Projectile>();
+    private int lives = 5;
 
     private final String projectileFile;
 
@@ -273,5 +274,13 @@ public class Character {
 
     public int getAvailableProjectiles() {
         return MAX_PROJECTILES - projectiles.size();
+    }
+
+    public void kill () {
+        this.lives--;
+    }
+
+    public int getLives () {
+        return this.lives;
     }
 }

@@ -52,9 +52,6 @@ public class Projectile {
     }
 
     public boolean isOut(float bgWidth) {
-        System.out.println(this.x);
-        System.out.println(bgWidth);
         return this.x < 0 || this.x > bgWidth;
     }
-
 }

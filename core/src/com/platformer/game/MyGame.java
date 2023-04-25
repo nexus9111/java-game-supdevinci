@@ -11,6 +11,7 @@ import com.badlogic.gdx.utils.ScreenUtils;
 import com.platformer.game.models.Character;
 import com.platformer.game.models.GifDecoder;
 import com.platformer.game.models.Platform;
+import com.platformer.game.models.States;
 
 public class MyGame extends ApplicationAdapter {
 
@@ -24,6 +25,7 @@ public class MyGame extends ApplicationAdapter {
     private final int DIRECTIONS = 4;
     private final Platform[] platforms = new Platform[5];
     private final Character[] characters = new Character[2];
+    private States state;
     SpriteBatch batch;
     private Animation<TextureRegion>[] animCharacter;
     private float characterX, characterY;
@@ -58,7 +60,7 @@ public class MyGame extends ApplicationAdapter {
                 Input.Keys.D,
                 Input.Keys.S,
                 Input.Keys.SPACE,
-                -20,
+                -30,
                 0,
                 "projectile2.png");
 
@@ -87,7 +89,6 @@ public class MyGame extends ApplicationAdapter {
             random2 = (int) (Math.random() * 5);
         }
         characters[1].setSpawn(platforms[random2].getSpawnX(CHARACTER_WIDTH), platforms[random2].getSpawnY());
-
         batch = new SpriteBatch();
         c = GifDecoder.loadGIFAnimation(Animation.PlayMode.LOOP, Gdx.files.internal("background2.gif").read());
     }
@@ -110,6 +111,11 @@ public class MyGame extends ApplicationAdapter {
     private void updateCharacters(float dt) {
         for (Character c : characters) {
             c.update(dt, platforms);
+        }
+        state = new States(characters);
+        for (Character hc : state.getCharactersHitByProjectile()) {
+            int random1 = (int) (Math.random() * 5);
+            hc.setSpawn(platforms[random1].getSpawnX(CHARACTER_WIDTH), platforms[random1].getSpawnY());
         }
     }
 

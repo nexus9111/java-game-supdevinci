@@ -1,7 +1,6 @@
 package com.platformer.game.models;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -19,8 +18,8 @@ public class Character {
     private final float speed;
     private final float animationSpeed;
     private final int MAX_JUMP_COUNT = 2;
-    private final float GRAVITY = -1000f;
-    private final float JUMP_SPEED = 500f;
+    private final float GRAVITY = -300f;
+    private final float JUMP_SPEED = 300f;
     private final float FAST_FALL_FORCE = -8_000f;
     private final int jumpKey;
     private final int leftKey;
@@ -39,9 +38,10 @@ public class Character {
     private int jumpCount = 0;
     private int anim = -1;
     private int stop = 0;
-    private boolean isLeft = false;
-    private List<Projectile> projectiles = new java.util.ArrayList<Projectile>();
-    private String projectileFile;
+    private boolean isLeft = true;
+    private final List<Projectile> projectiles = new java.util.ArrayList<Projectile>();
+
+    private final String projectileFile;
 
     /**
      * Constructs a Character object.
@@ -58,7 +58,7 @@ public class Character {
      * @param leftKey                 the key to move left
      * @param rightKey                the key to move right
      * @param downKey                 the key to move down
-     * @param shootKey                 the key to shoot
+     * @param shootKey                the key to shoot
      * @param offsetX                 the offset of the character in the x direction (the weight reduction or increase in case of character oversized background).
      *                                Set to 0 if you don't want to change the weight of the character
      * @param offsetY                 the offset of the character in the y direction (the height reduction or increase in case of character oversized background)
@@ -224,7 +224,49 @@ public class Character {
     }
 
     public void setSpawn(float x, float y) {
+        if (x < 0 || y < 0) {
+            throw new IllegalArgumentException("x and y cannot be less than 0");
+        }
+
         this.distanceToLeft = x;
         this.distanceToBottom = y;
+    }
+
+
+    public List<Projectile> getProjectiles() {
+        return projectiles;
+    }
+
+    public int getWidth() {
+        return width;
+    }
+
+    public int getHeight() {
+        return height;
+    }
+
+    public void removeProjectile(Projectile projectile) {
+        if (projectile == null) {
+            throw new IllegalArgumentException("projectile cannot be null");
+        }
+
+        if (!projectiles.contains(projectile)) {
+            throw new IllegalArgumentException("projectile is not in the list");
+        }
+
+        projectiles.remove(projectile);
+    }
+
+
+    public boolean hasProjectile(Projectile projectile) {
+        if (projectile == null) {
+            throw new IllegalArgumentException("projectile cannot be null");
+        }
+
+        return projectiles.contains(projectile);
+    }
+
+    public int getOffsetX() {
+        return offsetX;
     }
 }

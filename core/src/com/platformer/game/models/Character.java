@@ -10,62 +10,66 @@ import java.util.Iterator;
 import java.util.List;
 
 public class Character {
-    private final int MAX_PROJECTILES = 5;
-    private final Animation<TextureRegion>[] animCharacter;
-    private final int width;
-    private final int height;
-    private final float speed;
-    private final float animationSpeed;
-    private final int MAX_JUMP_COUNT = 2;
+    // constants
+    private final float ANIMATION_SPEED = .1f;
+    private final float FAST_FALL_FORCE = -4_000f;
     private final float GRAVITY = -800f;
     private final float JUMP_SPEED = 550f;
-    private final float FAST_FALL_FORCE = -4_000f;
-    private final int jumpKey;
-    private final int leftKey;
-    private final int rightKey;
-    private final int downKey;
-    private final int shootKey;
-    private final int DIRECTIONS = 4;
+    private final int MAX_PROJECTILES_COUNT = 5;
+    private final int MAX_JUMP_COUNT = 2;
+    private final int POSSIBLE_DIRECTIONS = 4;
+
+    // controls
+    private final int keyDown;
+    private final int keyJump;
+    private final int keyLeft;
+    private final int keyRight;
+    private final int keyShoot;
+    private final int height;
     private final int offsetX;
     private final int offsetY;
-    private float distanceToLeft;
-    private float distanceToBottom;
-    private float velocityY = 0;
-    private boolean isJumping = false;
-    private float time = .0f;
-    private int jumpCount = 0;
-    private int anim = -1;
-    private int stop = 0;
-    private boolean isLeft = true;
-    private final List<Projectile> projectiles = new java.util.ArrayList<>();
-    private int lives = 5;
-
-    private final Texture txCharacter;
-    private final Texture txHeart;
-    private final TextureRegion[][] txrCharacterTiles;
-
     private final String projectileFile;
+    private final float speed;
+    private final int width;
+    // textures
+    private final Texture texture;
+    private final Texture heartTexture;
+    private final TextureRegion[][] animationInstances;
+    private final Animation<TextureRegion>[] animation;
+    private final List<Projectile> projectiles = new java.util.ArrayList<>();
+    // variables
+    private float positionX;
+    private float positionY;
+    // states
+    private int animationState = -1;
+    private boolean isLeftLooking = true;
+    private boolean isJumping = false;
+    private int jumpCount = 0;
+    private int lastValidAnimationIndex = 0;
+    private int lives = 5;
+    private float time = .0f;
+    private float velocityY = 0;
+
 
     /**
      * Constructs a Character object.
      *
-     * @param fileName                the file name of the texture
-     * @param characterWidth          the width of the character in pixels (in the source image)
-     * @param characterHeight         the height of the character in pixels (in the source image)
-     * @param characterSpeed          the speed of the character
-     * @param characterAnimationSpeed the speed of the character animation
-     * @param percentToLeft           the percentage of the screen to place the character from the left
-     * @param percentToBottom         the percentage of the screen to place the character from the bottom
-     * @param scale                   the scale of the character (the size will be divided by this number)
-     * @param jumpKey                 the key to jump
-     * @param leftKey                 the key to move left
-     * @param rightKey                the key to move right
-     * @param downKey                 the key to move down
-     * @param shootKey                the key to shoot
-     * @param offsetX                 the offset of the character in the x direction (the weight reduction or increase in case of character oversized background).
-     *                                Set to 0 if you don't want to change the weight of the character
-     * @param offsetY                 the offset of the character in the y direction (the height reduction or increase in case of character oversized background)
-     *                                Set to 0 if you don't want to change the weight of the character
+     * @param fileName        the file name of the texture
+     * @param characterWidth  the width of the character in pixels (in the source image)
+     * @param characterHeight the height of the character in pixels (in the source image)
+     * @param characterSpeed  the speed of the character
+     * @param percentToLeft   the percentage of the screen to place the character from the left
+     * @param percentToBottom the percentage of the screen to place the character from the bottom
+     * @param scale           the scale of the character (the size will be divided by this number)
+     * @param jumpKey         the key to jump
+     * @param leftKey         the key to move left
+     * @param rightKey        the key to move right
+     * @param downKey         the key to move down
+     * @param shootKey        the key to shoot
+     * @param offsetX         the offset of the character in the x direction (the weight reduction or increase in case of character oversized background).
+     *                        Set to 0 if you don't want to change the weight of the character
+     * @param offsetY         the offset of the character in the y direction (the height reduction or increase in case of character oversized background)
+     *                        Set to 0 if you don't want to change the weight of the character
      * @throws IllegalArgumentException if fileName is null, or if width, height, scale, percentToBottom, or percentToLeft is less than 0
      */
     public Character(
@@ -73,9 +77,8 @@ public class Character {
             int characterWidth,
             int characterHeight,
             float characterSpeed,
-            float characterAnimationSpeed,
-            float percentToLeft,
             float percentToBottom,
+            float percentToLeft,
             double scale,
             int jumpKey,
             int leftKey,
@@ -97,106 +100,55 @@ public class Character {
         this.width = (int) (characterWidth / scale);
         this.height = (int) (characterHeight / scale);
         this.speed = characterSpeed;
-        this.animationSpeed = characterAnimationSpeed;
-        this.distanceToLeft = percentToLeft;
-        this.distanceToBottom = percentToBottom;
-        this.jumpKey = jumpKey;
-        this.leftKey = leftKey;
-        this.rightKey = rightKey;
-        this.downKey = downKey;
-        this.shootKey = shootKey;
+        this.positionY = percentToBottom;
+        this.positionX = percentToLeft;
+        this.keyJump = jumpKey;
+        this.keyLeft = leftKey;
+        this.keyRight = rightKey;
+        this.keyDown = downKey;
+        this.keyShoot = shootKey;
         this.offsetX = offsetX;
         this.offsetY = offsetY;
         this.projectileFile = projectileFile;
 
-        this.txCharacter = new Texture(fileName);
-        this.txrCharacterTiles = TextureRegion.split(this.txCharacter, characterWidth, characterHeight);
+        this.texture = new Texture(fileName);
+        this.animationInstances = TextureRegion.split(this.texture, characterWidth, characterHeight);
 
-        this.txHeart = new Texture("heart.png");
+        this.heartTexture = new Texture("heart.png");
 
-        this.animCharacter = new Animation[DIRECTIONS];
-        for (int i = 0; i < this.animCharacter.length; i++) {
-            this.animCharacter[i] = new Animation<>(this.animationSpeed, this.txrCharacterTiles[i]);
+        this.animation = new Animation[POSSIBLE_DIRECTIONS];
+        for (int i = 0; i < this.animation.length; i++) {
+            this.animation[i] = new Animation<>(this.ANIMATION_SPEED, this.animationInstances[i]);
         }
-    }
-
-    public float getDistanceToLeft() {
-        return distanceToLeft;
-    }
-
-    public float getDistanceToBottom() {
-        return distanceToBottom;
     }
 
     private void updateCharacter(float dt, Platform[] platforms) {
-        int dx = 0;
+        int dx = isMoving();
+        isJumping();
+        isShooting();
 
-        if (Gdx.input.isKeyPressed(this.leftKey) || Gdx.input.isKeyPressed(this.rightKey))
-            if (Gdx.input.isKeyPressed(this.leftKey)) {
-                this.isLeft = true;
-                dx += -1;
-            } else {
-                this.isLeft = false;
-                dx += 1;
-            }
-
-        if (jumpCount < MAX_JUMP_COUNT && Gdx.input.isKeyJustPressed(this.jumpKey)) {
-            if (isJumping) {
-                jumpCount++;
-            } else {
-                isJumping = true;
-                jumpCount = 1;
-            }
-            velocityY = JUMP_SPEED;
-        }
-
-        if (Gdx.input.isKeyJustPressed(this.shootKey) && getAvailableProjectiles() > 0) {
-            projectiles.add(new Projectile(
-                    this,
-                    45,
-                    37,
-                    500f,
-                    this.isLeft,
-                    this.projectileFile
-            ));
-        }
-
-        anim = -1;
-
-        // Apply gravity and fast fall force
         float gravityForce = GRAVITY;
         boolean fastFallUsed = false;
-        if (isJumping && Gdx.input.isKeyPressed(this.downKey)) {
+        if (isJumping && Gdx.input.isKeyPressed(this.keyDown)) {
             gravityForce += FAST_FALL_FORCE;
             fastFallUsed = true;
         }
         velocityY += gravityForce * dt;
-        this.distanceToBottom += velocityY * dt;
+        this.positionX += velocityY * dt;
 
-        // Check if the character is on the ground
-        if (distanceToBottom <= 0) {
-            // this.distanceToBottom = 0;
-            isJumping = false;
-            jumpCount = 0;
-            velocityY = 0;
-        }
+        updateJumpStatus();
 
         // Update character's horizontal position
-        distanceToLeft += dx * this.speed * dt;
+        positionY += dx * this.speed * dt;
 
-        // Determine animation index
-        if (dx < 0) {
-            anim = 1;
-        } else if (dx > 0) {
-            anim = 2;
-        }
+        determineNextAnimation(dx);
 
         time += dt;
 
         boolean isGoingDown = velocityY < 0;
         for (Platform p : platforms) {
-            if (p.isCharacterOnIt(distanceToLeft, distanceToBottom, this.width + this.offsetX, this.height - this.offsetY) && (isGoingDown || fastFallUsed)) {
-                this.distanceToBottom = p.getPercentToBottom() + p.getHeight();
+            if (p.isCharacterOnIt(positionY, positionX, this.width + this.offsetX, this.height - this.offsetY) && (isGoingDown || fastFallUsed)) {
+                this.positionX = p.getPercentToBottom() + p.getHeight();
                 isJumping = false;
                 velocityY = 0;
                 jumpCount = 0;
@@ -208,12 +160,67 @@ public class Character {
         }
     }
 
+    private void determineNextAnimation(int dx) {
+        animationState = -1;
+        // Determine animation index
+        if (dx < 0) {
+            animationState = 1;
+        } else if (dx > 0) {
+            animationState = 2;
+        }
+    }
+
+    private void updateJumpStatus() {
+        if (positionX <= 0) {
+            isJumping = false;
+            jumpCount = 0;
+            velocityY = 0;
+        }
+    }
+
+    private int isMoving() {
+        if (Gdx.input.isKeyPressed(this.keyLeft) || Gdx.input.isKeyPressed(this.keyRight)) {
+            if (Gdx.input.isKeyPressed(this.keyLeft)) {
+                this.isLeftLooking = true;
+                return -1;
+            }
+            this.isLeftLooking = false;
+            return 1;
+        }
+        return 0;
+    }
+
+    private void isJumping() {
+        if (jumpCount < MAX_JUMP_COUNT && Gdx.input.isKeyJustPressed(this.keyJump)) {
+            if (isJumping) {
+                jumpCount++;
+            } else {
+                isJumping = true;
+                jumpCount = 1;
+            }
+            velocityY = JUMP_SPEED;
+        }
+    }
+
+    private void isShooting() {
+        if (Gdx.input.isKeyJustPressed(this.keyShoot) && getRemainingProjectiles() > 0) {
+            projectiles.add(new Projectile(
+                    this,
+                    45,
+                    37,
+                    500f,
+                    this.isLeftLooking,
+                    this.projectileFile
+            ));
+        }
+    }
+
     private void renderCharacter(SpriteBatch batch) {
-        TextureRegion txrCharacter = anim < 0 ? txrCharacterTiles[stop][0] : animCharacter[stop = anim].getKeyFrame(this.time, true);
-        batch.draw(txrCharacter, this.distanceToLeft - 20, this.distanceToBottom, this.width, this.height);
+        TextureRegion characterTexture = animationState < 0 ? animationInstances[lastValidAnimationIndex][0] : animation[lastValidAnimationIndex = animationState].getKeyFrame(this.time, true);
+        batch.draw(characterTexture, this.positionY - 20, this.positionX, this.width, this.height);
 
         for (int i = 0; i < this.lives; i++) {
-            batch.draw(this.txHeart, this.distanceToLeft + (i * 20), this.distanceToBottom + this.height + 5, 15, 15);
+            batch.draw(this.heartTexture, this.positionY + (i * 20), this.positionX + this.height + 5, 15, 15);
         }
     }
 
@@ -239,8 +246,8 @@ public class Character {
             throw new IllegalArgumentException("x and y cannot be less than 0");
         }
 
-        this.distanceToLeft = x;
-        this.distanceToBottom = y;
+        this.positionY = x;
+        this.positionX = y;
     }
 
 
@@ -281,15 +288,23 @@ public class Character {
         return offsetX;
     }
 
-    public int getAvailableProjectiles() {
-        return MAX_PROJECTILES - projectiles.size();
+    public int getRemainingProjectiles() {
+        return MAX_PROJECTILES_COUNT - projectiles.size();
     }
 
-    public void kill () {
+    public void kill() {
         this.lives--;
     }
 
-    public int getLives () {
+    public int getLives() {
         return this.lives;
+    }
+
+    public float getPositionY() {
+        return positionY;
+    }
+
+    public float getPositionX() {
+        return positionX;
     }
 }

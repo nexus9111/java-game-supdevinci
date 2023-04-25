@@ -21,10 +21,10 @@ public class States {
         // kill characters hit by projectile
         for (Projectile projectile : this.projectiles) {
             for (Character character : this.characters) {
-                if (projectile.getX() >= character.getDistanceToLeft() &&
-                        projectile.getX() <= character.getDistanceToLeft() + character.getWidth() + character.getOffsetX() &&
-                        projectile.getY() >= character.getDistanceToBottom() &&
-                        projectile.getY() <= character.getDistanceToBottom() + character.getHeight() &&
+                if (projectile.getX() >= character.getPositionY() &&
+                        projectile.getX() <= character.getPositionY() + character.getWidth() + character.getOffsetX() &&
+                        projectile.getY() >= character.getPositionX() &&
+                        projectile.getY() <= character.getPositionX() + character.getHeight() &&
                         !character.hasProjectile(projectile)) {
                     charactersHitByProjectile.add(character);
                     projectilesToRemove.add(projectile);

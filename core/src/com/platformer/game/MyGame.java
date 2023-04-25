@@ -29,7 +29,6 @@ public class MyGame extends ApplicationAdapter {
     private final static int PLATFORM_WIDTH = 1998;
     private final static int PLATFORM_HEIGHT = 917;
     private final float CHARACTER_SPEED = 150f;
-    private final float CHARACTER_ANIM_SPEED = .1f;
     private final int DIRECTIONS = 4;
     private final Platform[] platforms = new Platform[5];
     private final Character[] characters = new Character[2];
@@ -81,7 +80,6 @@ public class MyGame extends ApplicationAdapter {
                 420,
                 360,
                 CHARACTER_SPEED,
-                CHARACTER_ANIM_SPEED,
                 characterX,
                 characterY,
                 4,
@@ -101,7 +99,6 @@ public class MyGame extends ApplicationAdapter {
                 80,
                 60,
                 CHARACTER_SPEED,
-                CHARACTER_ANIM_SPEED,
                 characterX,
                 characterY,
                 0.8,
@@ -193,7 +190,7 @@ public class MyGame extends ApplicationAdapter {
         state = new States(characters);
         for (Character hc : state.getCharactersHitByProjectile()) {
             hc.kill();
-            explode = new Explode((int) hc.getDistanceToLeft(), (int) hc.getDistanceToBottom());
+            explode = new Explode((int) hc.getPositionY(), (int) hc.getPositionX());
             explode.activate();
             if (hc.getLives() <= 0) {
                 gameStarted = false;
@@ -204,8 +201,10 @@ public class MyGame extends ApplicationAdapter {
         }
 
         for (Character c : characters) {
-            if (c.getDistanceToBottom() <= 0) {
+            if (c.getPositionX() <= 0) {
                 c.kill();
+                explode = new Explode((int) c.getPositionY(), (int) c.getPositionX());
+                explode.activate();
                 if (c.getLives() <= 0) {
                     gameStarted = false;
                     return;

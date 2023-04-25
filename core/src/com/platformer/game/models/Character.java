@@ -11,8 +11,6 @@ import java.util.List;
 
 public class Character {
     private final int MAX_PROJECTILES = 5;
-    private final Texture txCharacter;
-    private final TextureRegion[][] txrCharacterTiles;
     private final Animation<TextureRegion>[] animCharacter;
     private final int width;
     private final int height;
@@ -41,6 +39,10 @@ public class Character {
     private boolean isLeft = true;
     private final List<Projectile> projectiles = new java.util.ArrayList<>();
     private int lives = 5;
+
+    private final Texture txCharacter;
+    private final Texture txHeart;
+    private final TextureRegion[][] txrCharacterTiles;
 
     private final String projectileFile;
 
@@ -109,6 +111,8 @@ public class Character {
 
         this.txCharacter = new Texture(fileName);
         this.txrCharacterTiles = TextureRegion.split(this.txCharacter, characterWidth, characterHeight);
+
+        this.txHeart = new Texture("heart.png");
 
         this.animCharacter = new Animation[DIRECTIONS];
         for (int i = 0; i < this.animCharacter.length; i++) {
@@ -207,6 +211,10 @@ public class Character {
     private void renderCharacter(SpriteBatch batch) {
         TextureRegion txrCharacter = anim < 0 ? txrCharacterTiles[stop][0] : animCharacter[stop = anim].getKeyFrame(this.time, true);
         batch.draw(txrCharacter, this.distanceToLeft - 20, this.distanceToBottom, this.width, this.height);
+
+        for (int i = 0; i < this.lives; i++) {
+            batch.draw(this.txHeart, this.distanceToLeft + (i * 20), this.distanceToBottom + this.height + 5, 15, 15);
+        }
     }
 
     public void render(SpriteBatch batch, float size) {

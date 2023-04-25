@@ -7,7 +7,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 
 public class Platform {
-    private final int PLATFORM_FRAME = 5;
+    private int PLATFORM_FRAME;
     private final float PLATFORM_ANIM_SPEED = .3f;
 
     private final float width;
@@ -28,7 +28,7 @@ public class Platform {
      * @param percentToLeft   the percentage of the screen to place the platform from the left
      * @throws IllegalArgumentException if fileName is null, or if width, height, scale, percentToBottom, or percentToLeft is less than 0
      */
-    public Platform(String fileName, int width, int height, int scale, int percentToBottom, int percentToLeft) {
+    public Platform(String fileName, int width, int height, int scale, int percentToBottom, int percentToLeft, int frames) {
         if (fileName == null) {
             throw new IllegalArgumentException("fileName cannot be null");
         }
@@ -40,15 +40,16 @@ public class Platform {
         Texture txPlatform = new Texture(fileName);
         TextureRegion[][] txrPlatformTiles = TextureRegion.split(txPlatform, width, height);
 
-        this.animPlatform = new Animation[this.PLATFORM_FRAME];
+        this.animPlatform = new Animation[frames];
         for (int i = 0; i < this.animPlatform.length; i++) {
             this.animPlatform[i] = new Animation<>(this.PLATFORM_ANIM_SPEED, txrPlatformTiles[i]);
         }
 
         this.width = ((float) width / scale);
         this.height = ((float) height / scale);
-        this.percentToBottom = (float) (Gdx.graphics.getHeight() / 100 * percentToLeft) - (this.height / 2);
-        this.percentToLeft = (Gdx.graphics.getWidth() - this.width) / 100 * percentToBottom;
+        this.PLATFORM_FRAME = frames;
+        this.percentToBottom = (float) (Gdx.graphics.getHeight() / 100 * percentToBottom) - (this.height / 2);
+        this.percentToLeft = (Gdx.graphics.getWidth() - this.width) / 100 * percentToLeft;
     }
 
     public float getHeight() {
@@ -70,7 +71,7 @@ public class Platform {
     }
 
     public boolean isCharacterOnIt(float characterX, float characterY, float characterWidth, float characterHeight) {
-        return characterX + characterWidth > this.percentToLeft &&
+        return characterX + (characterWidth / 2) > this.percentToLeft &&
                 characterX < this.percentToLeft + this.width &&
                 characterY >= this.percentToBottom + this.height - 5 &&
                 characterY <= this.percentToBottom + this.height + 5;

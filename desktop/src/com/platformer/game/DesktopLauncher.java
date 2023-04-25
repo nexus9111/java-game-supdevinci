@@ -11,6 +11,8 @@ public class DesktopLauncher {
 		config.setForegroundFPS(60);
 		config.setWindowedMode(1200, 800);
 		config.setResizable(false);
+		// set keyboard to azerty
+		config.setBackBufferConfig(8, 8, 8, 8, 16, 0, 4);
 		config.setTitle("Platformer");
 		new Lwjgl3Application(new MyGame(), config);
 	}

@@ -3,8 +3,10 @@ package com.platformer.game;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.utils.ScreenUtils;
@@ -12,6 +14,18 @@ import com.platformer.game.models.Character;
 import com.platformer.game.models.GifDecoder;
 import com.platformer.game.models.Platform;
 import com.platformer.game.models.States;
+import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
+import com.badlogic.gdx.scenes.scene2d.ui.TextButton.TextButtonStyle;
+import com.badlogic.gdx.scenes.scene2d.Actor;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
+import com.badlogic.gdx.utils.viewport.ScreenViewport;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
+import com.badlogic.gdx.scenes.scene2d.ui.TextButton.TextButtonStyle;
+
 
 public class MyGame extends ApplicationAdapter {
 
@@ -25,14 +39,20 @@ public class MyGame extends ApplicationAdapter {
     private final int DIRECTIONS = 4;
     private final Platform[] platforms = new Platform[5];
     private final Character[] characters = new Character[2];
-    private States state;
     SpriteBatch batch;
+    Animation<TextureRegion> c;
+    float elapsed;
+    private States state;
     private Animation<TextureRegion>[] animCharacter;
     private float characterX, characterY;
     private float platformAnimTime = 0f;
     private Texture backgroundTexture;
-    Animation<TextureRegion> c;
-    float elapsed;
+    private Stage stage;
+    private Skin skin;
+    private TextButton playButton;
+    private boolean gameStarted;
+
+
 
     private void loadTextures() {
         backgroundTexture = new Texture("background1.png");
@@ -91,7 +111,39 @@ public class MyGame extends ApplicationAdapter {
         characters[1].setSpawn(platforms[random2].getSpawnX(CHARACTER_WIDTH), platforms[random2].getSpawnY());
         batch = new SpriteBatch();
         c = GifDecoder.loadGIFAnimation(Animation.PlayMode.LOOP, Gdx.files.internal("background2.gif").read());
+
+        stage = new Stage(new ScreenViewport());
+        createPlayButton();
+
+        Gdx.input.setInputProcessor(stage);
     }
+
+    private void createPlayButton() {
+        Skin skin = new Skin();
+        BitmapFont font = new BitmapFont();
+        skin.add("default", font);
+
+        TextButtonStyle textButtonStyle = new TextButtonStyle();
+        textButtonStyle.font = skin.getFont("default");
+        textButtonStyle.fontColor = Color.WHITE;
+        textButtonStyle.overFontColor = Color.LIGHT_GRAY;
+        textButtonStyle.downFontColor = Color.DARK_GRAY;
+
+        playButton = new TextButton("Jouer", textButtonStyle);
+        playButton.setPosition(Gdx.graphics.getWidth() / 2 - playButton.getWidth() / 2, Gdx.graphics.getHeight() / 2 - playButton.getHeight() / 2);
+
+        playButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                gameStarted = true;
+                playButton.remove();
+            }
+        });
+
+        stage.addActor(playButton);
+    }
+
+
 
     private void renderBackground(float dt) {
         elapsed += dt * 0.5;
@@ -130,21 +182,30 @@ public class MyGame extends ApplicationAdapter {
         ScreenUtils.clear(0, 0, 0, 1);
         float dt = Gdx.graphics.getDeltaTime();
 
-        updateCharacters(dt);
+        if (gameStarted) {
+            updateCharacters(dt);
 
-        batch.begin();
+            batch.begin();
 
-        renderBackground(dt);
-        // batch.draw(c.getKeyFrame(elapsed), 20.0f, 20.0f);
-        renderPlatforms(dt);
-        renderCharacters();
+            renderBackground(dt);
+            renderPlatforms(dt);
+            renderCharacters();
 
-        batch.end();
+            batch.end();
+        } else {
+            batch.begin();
+            renderBackground(dt);
+            batch.end();
+            stage.act(dt);
+            stage.draw();
+        }
     }
 
     @Override
     public void dispose() {
         batch.dispose();
         backgroundTexture.dispose();
+        stage.dispose();
+        skin.dispose();
     }
 }

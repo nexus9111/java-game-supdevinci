@@ -1,5 +1,7 @@
 package com.platformer.game.models;
 
+import com.badlogic.gdx.Gdx;
+
 public class Controles {
     private final int keyDown;
     private final int keyJump;
@@ -15,23 +17,23 @@ public class Controles {
         this.keyShoot = keyShoot;
     }
 
-    public int getKeyDown() {
-        return keyDown;
+    public boolean goLeft() {
+        return Gdx.input.isKeyPressed(this.keyLeft);
     }
 
-    public int getKeyJump() {
-        return keyJump;
+    public boolean goRight() {
+        return Gdx.input.isKeyPressed(this.keyRight);
     }
 
-    public int getKeyLeft() {
-        return keyLeft;
+    public boolean jump() {
+        return Gdx.input.isKeyJustPressed(this.keyJump);
     }
 
-    public int getKeyRight() {
-        return keyRight;
+    public boolean shoot() {
+        return Gdx.input.isKeyJustPressed(this.keyShoot);
     }
 
-    public int getKeyShoot() {
-        return keyShoot;
+    public boolean goDown() {
+        return Gdx.input.isKeyPressed(this.keyDown);
     }
 }

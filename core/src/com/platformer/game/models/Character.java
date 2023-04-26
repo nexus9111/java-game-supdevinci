@@ -3,6 +3,7 @@ package com.platformer.game.models;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 
@@ -172,7 +173,7 @@ public class Character implements ICharacter {
 
         float gravityForce = GRAVITY;
         boolean fastFallUsed = false;
-        if (isJumping && Gdx.input.isKeyPressed(controles.getKeyDown())) {
+        if (isJumping && controles.goDown()) {
             gravityForce += FAST_FALL_FORCE;
             fastFallUsed = true;
         }
@@ -224,8 +225,8 @@ public class Character implements ICharacter {
     }
 
     private int isMoving() {
-        if (Gdx.input.isKeyPressed(controles.getKeyLeft()) || Gdx.input.isKeyPressed(controles.getKeyRight())) {
-            if (Gdx.input.isKeyPressed(controles.getKeyLeft())) {
+        if (controles.goLeft() || controles.goRight()) {
+            if (controles.goLeft()) {
                 this.isLeftLooking = true;
                 return -1;
             }
@@ -236,7 +237,7 @@ public class Character implements ICharacter {
     }
 
     private void isJumping() {
-        if (jumpCount < MAX_JUMP_COUNT && Gdx.input.isKeyJustPressed(controles.getKeyJump())) {
+        if (jumpCount < MAX_JUMP_COUNT && controles.jump()) {
             if (isJumping) {
                 jumpCount++;
             } else {
@@ -248,7 +249,7 @@ public class Character implements ICharacter {
     }
 
     private void isShooting() {
-        if (Gdx.input.isKeyJustPressed(controles.getKeyShoot()) && getRemainingProjectiles() > 0) {
+        if (controles.shoot() && getRemainingProjectiles() > 0) {
             projectiles.add(new Projectile(this, 45, 37, 500f, this.isLeftLooking, this.projectileFile));
         }
     }
@@ -262,5 +263,9 @@ public class Character implements ICharacter {
         for (int i = 0; i < this.lives; i++) {
             batch.draw(this.heartTexture, heartPositionX + (i * 20), this.positionY + this.height + 5, 15, 15);
         }
+    }
+
+    public TextureRegion getTexture() {
+        return animationInstances[0][0];
     }
 }

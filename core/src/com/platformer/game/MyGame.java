@@ -30,6 +30,7 @@ public class MyGame extends ApplicationAdapter {
     private final static int PLATFORM_WIDTH = 1998;
     private final static int PLATFORM_HEIGHT = 917;
     private final static int BACKGROUND_COUNT = 6;
+    private final static boolean FUN_MUSIC = true;
 
     private final Character[] characters = new Character[2];
     private final Platform[] platforms = new Platform[5];
@@ -63,7 +64,7 @@ public class MyGame extends ApplicationAdapter {
         menuMusic = Gdx.audio.newMusic(Gdx.files.internal("menu_sound.wav"));
         menuMusic.setLooping(true);
         menuMusic.play();
-        gameMusic = Gdx.audio.newMusic(Gdx.files.internal("battle_sound.wav"));
+        gameMusic = Gdx.audio.newMusic(Gdx.files.internal(FUN_MUSIC ? "battle_sound_fun.mp3" : "battle_sound.wav"));
         gameMusic.setLooping(true);
     }
 

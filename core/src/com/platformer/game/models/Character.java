@@ -72,7 +72,7 @@ public class Character {
      *                        Set to 0 if you don't want to change the weight of the character
      * @throws IllegalArgumentException if fileName is null, or if width, height, scale, percentToBottom, or percentToLeft is less than 0
      */
-    public Character(String fileName, int characterWidth, int characterHeight, float characterSpeed, float percentToBottom, float percentToLeft, double scale, int jumpKey, int leftKey, int rightKey, int downKey, int shootKey, int offsetX, int offsetY, String projectileFile) {
+    public Character(String fileName, int characterWidth, int characterHeight, float characterSpeed, float percentToLeft, float percentToBottom, double scale, int jumpKey, int leftKey, int rightKey, int downKey, int shootKey, int offsetX, int offsetY, String projectileFile) {
         if (fileName == null) {
             throw new IllegalArgumentException("fileName cannot be null");
         }

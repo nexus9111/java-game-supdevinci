@@ -24,30 +24,25 @@ import com.platformer.game.models.*;
 public class MyGame extends ApplicationAdapter {
 
     public final static int CHARACTER_WIDTH = 64;
-    public final static int CHARACTER_HEIGHT = 64;
-    public final static int BACKGROUND_TILE_WIDTH = 16;
     private final static int PLATFORM_WIDTH = 1998;
     private final static int PLATFORM_HEIGHT = 917;
     private final float CHARACTER_SPEED = 150f;
-    private final int DIRECTIONS = 4;
-    private final Platform[] platforms = new Platform[5];
-    private final Character[] characters = new Character[2];
-    SpriteBatch batch;
-    Animation<TextureRegion> dynamiqueBackground;
-    float elapsed;
-    private States state;
-    private Animation<TextureRegion>[] animCharacter;
-    private float characterX, characterY;
+
+    private SpriteBatch batch;
+    private float elapsed;
     private float platformAnimTime = 0f;
-    private Texture menuButtonShape;
-    private Texture player1controls;
-    private Texture player2controls;
     private Stage stage;
     private Skin skin;
-    private TextButton playButton;
     private boolean gameStarted;
     private Explode explode;
 
+    private Texture player1controls;
+    private Texture player2controls;
+    private Texture menuButtonShape;
+    private TextButton playButton;
+    private final Platform[] platforms = new Platform[5];
+    private final Character[] characters = new Character[2];
+    private Animation<TextureRegion> dynamicBackground;
 
     private void loadTextures() {
         menuButtonShape = new Texture("buttonshape.png");
@@ -67,7 +62,7 @@ public class MyGame extends ApplicationAdapter {
         setCharacters();
 
         batch = new SpriteBatch();
-        dynamiqueBackground = GifDecoder.loadGIFAnimation(Animation.PlayMode.LOOP, Gdx.files.internal("background2.gif").read());
+        dynamicBackground = GifDecoder.loadGIFAnimation(Animation.PlayMode.LOOP, Gdx.files.internal("background2.gif").read());
 
         stage = new Stage(new ScreenViewport());
         createPlayButton();
@@ -76,12 +71,13 @@ public class MyGame extends ApplicationAdapter {
     }
 
     private void setCharacters() {
+        int random = (int) (Math.random() * 5);
         characters[0] = new Character("character1.png",
                 420,
                 360,
                 CHARACTER_SPEED,
-                characterX,
-                characterY,
+                platforms[random].getSpawnX(CHARACTER_WIDTH),
+                platforms[random].getSpawnY(),
                 4,
                 Input.Keys.W,
                 Input.Keys.A,
@@ -92,15 +88,16 @@ public class MyGame extends ApplicationAdapter {
                 0,
                 "projectile2.png");
 
-        int random1 = (int) (Math.random() * 5);
-        characters[0].setSpawn(platforms[random1].getSpawnX(CHARACTER_WIDTH), platforms[random1].getSpawnY());
-
+        int random2 = (int) (Math.random() * 5);
+        while (random == random2) {
+            random2 = (int) (Math.random() * 5);
+        }
         characters[1] = new Character("character2.png",
                 80,
                 60,
                 CHARACTER_SPEED,
-                characterX,
-                characterY,
+                platforms[random2].getSpawnX(CHARACTER_WIDTH),
+                platforms[random2].getSpawnY(),
                 0.8,
                 Input.Keys.UP,
                 Input.Keys.LEFT,
@@ -110,17 +107,14 @@ public class MyGame extends ApplicationAdapter {
                 0,
                 0,
                 "projectile.png");
-
-        int random2 = (int) (Math.random() * 5);
-        while (random1 == random2) {
-            random2 = (int) (Math.random() * 5);
-        }
-        characters[1].setSpawn(platforms[random2].getSpawnX(CHARACTER_WIDTH), platforms[random2].getSpawnY());
     }
 
     private void reset() {
         setCharacters();
         createPlayButton();
+        if (explode != null && explode.isActive()) {
+            explode = null;
+        }
     }
 
     private void createPlayButton() {
@@ -135,7 +129,7 @@ public class MyGame extends ApplicationAdapter {
         textButtonStyle.downFontColor = Color.DARK_GRAY;
 
         playButton = new TextButton("Jouer", textButtonStyle);
-        playButton.setPosition(Gdx.graphics.getWidth() / 2 - playButton.getWidth() / 2, Gdx.graphics.getHeight() / 2 - playButton.getHeight() / 2);
+        playButton.setPosition((float) Gdx.graphics.getWidth() / 2 - playButton.getWidth() / 2, (float) Gdx.graphics.getHeight() / 2 - playButton.getHeight() / 2);
 
         playButton.addListener(new ClickListener() {
             @Override
@@ -154,7 +148,7 @@ public class MyGame extends ApplicationAdapter {
         elapsed += dt * 0.5;
         float screenWidth = Gdx.graphics.getWidth();
         float screenHeight = Gdx.graphics.getHeight();
-        batch.draw(dynamiqueBackground.getKeyFrame(elapsed), 0f, 0f, screenWidth, screenHeight);
+        batch.draw(dynamicBackground.getKeyFrame(elapsed), 0f, 0f, screenWidth, screenHeight);
     }
 
     private void renderBackgroundMenu(float dt) {
@@ -187,7 +181,7 @@ public class MyGame extends ApplicationAdapter {
         for (Character c : characters) {
             c.update(dt, platforms);
         }
-        state = new States(characters);
+        States state = new States(characters);
         for (Character hc : state.getCharactersHitByProjectile()) {
             hc.kill();
             explode = new Explode((int) hc.getPositionX(), (int) hc.getPositionY());

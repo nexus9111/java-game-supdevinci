@@ -79,10 +79,10 @@ public class Platform {
     }
 
     public float getSpawnX(int width) {
-        return (this.positionX + this.width / 2) - ((float) width / 2);
+        return (this.positionX + this.width / 2) - ((float) width / 2) + 20;
     }
 
     public float getSpawnY() {
-        return this.positionY + this.height;
+        return this.positionY + this.height + 20;
     }
 }

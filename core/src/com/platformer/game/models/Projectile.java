@@ -20,8 +20,8 @@ public class Projectile {
 
     public Projectile(Character character, float width, float height, float speed, boolean isLeft, String fileName) {
         this.character = character;
-        this.x = this.character.getPositionY();
-        this.y = this.character.getPositionX() + 30;
+        this.x = this.character.getPositionX();
+        this.y = this.character.getPositionY() + 30;
         this.width = width;
         this.height = height;
         this.speed = speed;

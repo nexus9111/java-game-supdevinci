@@ -12,8 +12,8 @@ public class Platform {
 
     private final float width;
     private final float height;
-    private final float percentToBottom;
-    private final float percentToLeft;
+    private final float positionY;
+    private final float positionX;
     private final Animation<TextureRegion>[] animPlatform;
 
 
@@ -48,40 +48,40 @@ public class Platform {
         this.width = ((float) width / scale);
         this.height = ((float) height / scale);
         this.PLATFORM_FRAME = frames;
-        this.percentToBottom = (float) (Gdx.graphics.getHeight() / 100 * percentToBottom) - (this.height / 2);
-        this.percentToLeft = (Gdx.graphics.getWidth() - this.width) / 100 * percentToLeft;
+        this.positionY = (float) (Gdx.graphics.getHeight() / 100 * percentToBottom) - (this.height / 2);
+        this.positionX = (Gdx.graphics.getWidth() - this.width) / 100 * percentToLeft;
     }
 
     public float getHeight() {
         return this.height;
     }
 
-    public float getPercentToLeft() {
-        return this.percentToLeft;
+    public float getPositionX() {
+        return this.positionX;
     }
 
     public void render(SpriteBatch batch, float time) {
         TextureRegion txrCurrentPlatform = this.animPlatform[(int) (time / this.PLATFORM_ANIM_SPEED) % this.PLATFORM_FRAME].getKeyFrame(time, true);
-        batch.draw(txrCurrentPlatform, this.percentToLeft, this.percentToBottom, this.width, this.height);
+        batch.draw(txrCurrentPlatform, this.positionX, this.positionY, this.width, this.height);
     }
 
 
-    public float getPercentToBottom() {
-        return percentToBottom;
+    public float getPositionY() {
+        return positionY;
     }
 
     public boolean isCharacterOnIt(float characterX, float characterY, float characterWidth, float characterHeight) {
-        return characterX + (characterWidth / 2) > this.percentToLeft &&
-                characterX < this.percentToLeft + this.width &&
-                characterY >= this.percentToBottom + this.height - 8 &&
-                characterY <= this.percentToBottom + this.height + 8;
+        return characterX + (characterWidth / 2) > this.positionX &&
+                characterX < this.positionX + this.width &&
+                characterY >= this.positionY + this.height - 8 &&
+                characterY <= this.positionY + this.height + 8;
     }
 
     public float getSpawnX(int width) {
-        return (this.percentToLeft + this.width / 2) - ((float) width / 2);
+        return (this.positionX + this.width / 2) - ((float) width / 2);
     }
 
     public float getSpawnY() {
-        return this.percentToBottom + this.height;
+        return this.positionY + this.height;
     }
 }

@@ -190,7 +190,7 @@ public class MyGame extends ApplicationAdapter {
         state = new States(characters);
         for (Character hc : state.getCharactersHitByProjectile()) {
             hc.kill();
-            explode = new Explode((int) hc.getPositionY(), (int) hc.getPositionX());
+            explode = new Explode((int) hc.getPositionX(), (int) hc.getPositionY());
             explode.activate();
             if (hc.getLives() <= 0) {
                 gameStarted = false;
@@ -201,9 +201,9 @@ public class MyGame extends ApplicationAdapter {
         }
 
         for (Character c : characters) {
-            if (c.getPositionX() <= 0) {
+            if (c.getPositionY() <= 0) {
                 c.kill();
-                explode = new Explode((int) c.getPositionY(), (int) c.getPositionX());
+                explode = new Explode((int) c.getPositionX(), (int) c.getPositionY());
                 explode.activate();
                 if (c.getLives() <= 0) {
                     gameStarted = false;

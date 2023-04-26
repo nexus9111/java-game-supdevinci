@@ -38,8 +38,8 @@ public class Character {
     private final Animation<TextureRegion>[] animation;
     private final List<Projectile> projectiles = new java.util.ArrayList<>();
     // variables
-    private float positionX;
     private float positionY;
+    private float positionX;
     // states
     private int animationState = -1;
     private boolean isLeftLooking = true;
@@ -72,23 +72,7 @@ public class Character {
      *                        Set to 0 if you don't want to change the weight of the character
      * @throws IllegalArgumentException if fileName is null, or if width, height, scale, percentToBottom, or percentToLeft is less than 0
      */
-    public Character(
-            String fileName,
-            int characterWidth,
-            int characterHeight,
-            float characterSpeed,
-            float percentToBottom,
-            float percentToLeft,
-            double scale,
-            int jumpKey,
-            int leftKey,
-            int rightKey,
-            int downKey,
-            int shootKey,
-            int offsetX,
-            int offsetY,
-            String projectileFile
-    ) {
+    public Character(String fileName, int characterWidth, int characterHeight, float characterSpeed, float percentToBottom, float percentToLeft, double scale, int jumpKey, int leftKey, int rightKey, int downKey, int shootKey, int offsetX, int offsetY, String projectileFile) {
         if (fileName == null) {
             throw new IllegalArgumentException("fileName cannot be null");
         }
@@ -100,8 +84,8 @@ public class Character {
         this.width = (int) (characterWidth / scale);
         this.height = (int) (characterHeight / scale);
         this.speed = characterSpeed;
-        this.positionY = percentToBottom;
         this.positionX = percentToLeft;
+        this.positionY = percentToBottom;
         this.keyJump = jumpKey;
         this.keyLeft = leftKey;
         this.keyRight = rightKey;
@@ -119,108 +103,6 @@ public class Character {
         this.animation = new Animation[POSSIBLE_DIRECTIONS];
         for (int i = 0; i < this.animation.length; i++) {
             this.animation[i] = new Animation<>(this.ANIMATION_SPEED, this.animationInstances[i]);
-        }
-    }
-
-    private void updateCharacter(float dt, Platform[] platforms) {
-        int dx = isMoving();
-        isJumping();
-        isShooting();
-
-        float gravityForce = GRAVITY;
-        boolean fastFallUsed = false;
-        if (isJumping && Gdx.input.isKeyPressed(this.keyDown)) {
-            gravityForce += FAST_FALL_FORCE;
-            fastFallUsed = true;
-        }
-        velocityY += gravityForce * dt;
-        this.positionX += velocityY * dt;
-
-        updateJumpStatus();
-
-        // Update character's horizontal position
-        positionY += dx * this.speed * dt;
-
-        determineNextAnimation(dx);
-
-        time += dt;
-
-        boolean isGoingDown = velocityY < 0;
-        for (Platform p : platforms) {
-            if (p.isCharacterOnIt(positionY, positionX, this.width + this.offsetX, this.height - this.offsetY) && (isGoingDown || fastFallUsed)) {
-                this.positionX = p.getPercentToBottom() + p.getHeight();
-                isJumping = false;
-                velocityY = 0;
-                jumpCount = 0;
-            }
-        }
-
-        for (Projectile p : projectiles) {
-            p.update(dt);
-        }
-    }
-
-    private void determineNextAnimation(int dx) {
-        animationState = -1;
-        // Determine animation index
-        if (dx < 0) {
-            animationState = 1;
-        } else if (dx > 0) {
-            animationState = 2;
-        }
-    }
-
-    private void updateJumpStatus() {
-        if (positionX <= 0) {
-            isJumping = false;
-            jumpCount = 0;
-            velocityY = 0;
-        }
-    }
-
-    private int isMoving() {
-        if (Gdx.input.isKeyPressed(this.keyLeft) || Gdx.input.isKeyPressed(this.keyRight)) {
-            if (Gdx.input.isKeyPressed(this.keyLeft)) {
-                this.isLeftLooking = true;
-                return -1;
-            }
-            this.isLeftLooking = false;
-            return 1;
-        }
-        return 0;
-    }
-
-    private void isJumping() {
-        if (jumpCount < MAX_JUMP_COUNT && Gdx.input.isKeyJustPressed(this.keyJump)) {
-            if (isJumping) {
-                jumpCount++;
-            } else {
-                isJumping = true;
-                jumpCount = 1;
-            }
-            velocityY = JUMP_SPEED;
-        }
-    }
-
-    private void isShooting() {
-        if (Gdx.input.isKeyJustPressed(this.keyShoot) && getRemainingProjectiles() > 0) {
-            projectiles.add(new Projectile(
-                    this,
-                    45,
-                    37,
-                    500f,
-                    this.isLeftLooking,
-                    this.projectileFile
-            ));
-        }
-    }
-
-    private void renderCharacter(SpriteBatch batch) {
-        TextureRegion characterTexture = animationState < 0 ? animationInstances[lastValidAnimationIndex][0] : animation[lastValidAnimationIndex = animationState].getKeyFrame(this.time, true);
-        batch.draw(characterTexture, this.positionY - 20, this.positionX, this.width, this.height);
-
-        for (int i = 0; i < this.lives; i++) {
-            batch.draw(this.heartTexture, this.positionY + (i * 20), this.positionX + this.height + 5, 15, 15);
         }
     }
 
@@ -246,8 +128,8 @@ public class Character {
             throw new IllegalArgumentException("x and y cannot be less than 0");
         }
 
-        this.positionY = x;
-        this.positionX = y;
+        this.positionX = x;
+        this.positionY = y;
     }
 
 
@@ -300,11 +182,114 @@ public class Character {
         return this.lives;
     }
 
+    public float getPositionX() {
+        return positionX;
+    }
+
     public float getPositionY() {
         return positionY;
     }
 
-    public float getPositionX() {
-        return positionX;
+    private void updateCharacter(float dt, Platform[] platforms) {
+        int dx = isMoving();
+        isJumping();
+        isShooting();
+
+        float gravityForce = GRAVITY;
+        boolean fastFallUsed = false;
+        if (isJumping && Gdx.input.isKeyPressed(this.keyDown)) {
+            gravityForce += FAST_FALL_FORCE;
+            fastFallUsed = true;
+        }
+        velocityY += gravityForce * dt;
+        this.positionY += velocityY * dt;
+
+        updateJumpStatus();
+
+        // Update character's horizontal position
+        positionX += dx * this.speed * dt;
+
+        determineNextAnimationState(dx);
+
+        time += dt;
+
+        isOnAPlatform(platforms, fastFallUsed);
+        updateProjectiles(dt);
     }
+
+    private void updateProjectiles(float dt) {
+        for (Projectile p : projectiles) {
+            p.update(dt);
+        }
+    }
+
+    private void isOnAPlatform(Platform[] platforms, boolean fastFallUsed) {
+        boolean isGoingDown = velocityY < 0;
+        for (Platform p : platforms) {
+            if (p.isCharacterOnIt(positionX, positionY, this.width + this.offsetX, this.height + this.offsetY) && (isGoingDown || fastFallUsed)) {
+                this.positionY = p.getPositionY() + p.getHeight();
+                isJumping = false;
+                velocityY = 0;
+                jumpCount = 0;
+            }
+        }
+    }
+
+    private void determineNextAnimationState(int dx) {
+        animationState = -1;
+        if (dx < 0) {
+            animationState = 1;
+        } else if (dx > 0) {
+            animationState = 2;
+        }
+    }
+
+    private void updateJumpStatus() {
+        if (positionY <= 0) {
+            isJumping = false;
+            jumpCount = 0;
+            velocityY = 0;
+        }
+    }
+
+    private int isMoving() {
+        if (Gdx.input.isKeyPressed(this.keyLeft) || Gdx.input.isKeyPressed(this.keyRight)) {
+            if (Gdx.input.isKeyPressed(this.keyLeft)) {
+                this.isLeftLooking = true;
+                return -1;
+            }
+            this.isLeftLooking = false;
+            return 1;
+        }
+        return 0;
+    }
+
+    private void isJumping() {
+        if (jumpCount < MAX_JUMP_COUNT && Gdx.input.isKeyJustPressed(this.keyJump)) {
+            if (isJumping) {
+                jumpCount++;
+            } else {
+                isJumping = true;
+                jumpCount = 1;
+            }
+            velocityY = JUMP_SPEED;
+        }
+    }
+
+    private void isShooting() {
+        if (Gdx.input.isKeyJustPressed(this.keyShoot) && getRemainingProjectiles() > 0) {
+            projectiles.add(new Projectile(this, 45, 37, 500f, this.isLeftLooking, this.projectileFile));
+        }
+    }
+
+    private void renderCharacter(SpriteBatch batch) {
+        TextureRegion characterTexture = animationState < 0 ? animationInstances[lastValidAnimationIndex][0] : animation[lastValidAnimationIndex = animationState].getKeyFrame(this.time, true);
+        batch.draw(characterTexture, this.positionX - 20, this.positionY, this.width, this.height);
+
+        for (int i = 0; i < this.lives; i++) {
+            batch.draw(this.heartTexture, this.positionX + (i * 20), this.positionY + this.height + 5, 15, 15);
+        }
+    }
+
+
 }

@@ -23,26 +23,24 @@ import com.platformer.game.models.*;
 
 public class MyGame extends ApplicationAdapter {
 
-    public final static int CHARACTER_WIDTH = 64;
+    private final static float CHARACTER_SPEED = 150f;
+    private final static int CHARACTER_WIDTH = 64;
     private final static int PLATFORM_WIDTH = 1998;
     private final static int PLATFORM_HEIGHT = 917;
-    private final float CHARACTER_SPEED = 150f;
-
+    private final Character[] characters = new Character[2];
+    private final Platform[] platforms = new Platform[5];
     private SpriteBatch batch;
     private float elapsed;
-    private float platformAnimTime = 0f;
-    private Stage stage;
-    private Skin skin;
-    private boolean gameStarted;
     private Explode explode;
-
+    private boolean gameStarted;
+    private float platformAnimTime = 0f;
+    private Skin skin;
+    private Stage stage;
+    private Texture menuButtonShape;
     private Texture player1controls;
     private Texture player2controls;
-    private Texture menuButtonShape;
-    private TextButton playButton;
-    private final Platform[] platforms = new Platform[5];
-    private final Character[] characters = new Character[2];
     private Animation<TextureRegion> dynamicBackground;
+    private TextButton playButton;
 
     private void loadTextures() {
         menuButtonShape = new Texture("buttonshape.png");
@@ -53,68 +51,22 @@ public class MyGame extends ApplicationAdapter {
     @Override
     public void create() {
         loadTextures();
-        platforms[0] = new Platform("platform.png", PLATFORM_WIDTH, PLATFORM_HEIGHT, 5, 50, 50, 5);
-        platforms[1] = new Platform("small_platform.png", 1578, 201, 10, 25, 15, 1);
-        platforms[2] = new Platform("small_platform.png", 1578, 201, 10, 25, 85, 1);
-        platforms[3] = new Platform("small_platform.png", 1578, 201, 10, 75, 85, 1);
-        platforms[4] = new Platform("small_platform.png", 1578, 201, 10, 75, 15, 1);
-
+        setPlatforms();
         setCharacters();
+        setBackground();
+        setPlayButton();
 
         batch = new SpriteBatch();
-        dynamicBackground = GifDecoder.loadGIFAnimation(Animation.PlayMode.LOOP, Gdx.files.internal("background2.gif").read());
+    }
 
+    private void setBackground() {
+        dynamicBackground = GifDecoder.loadGIFAnimation(Animation.PlayMode.LOOP, Gdx.files.internal("background2.gif").read());
+    }
+
+    private void setPlayButton() {
         stage = new Stage(new ScreenViewport());
         createPlayButton();
-
         Gdx.input.setInputProcessor(stage);
-    }
-
-    private void setCharacters() {
-        int random = (int) (Math.random() * 5);
-        characters[0] = new Character("character1.png",
-                420,
-                360,
-                CHARACTER_SPEED,
-                platforms[random].getSpawnX(CHARACTER_WIDTH),
-                platforms[random].getSpawnY(),
-                4,
-                Input.Keys.W,
-                Input.Keys.A,
-                Input.Keys.D,
-                Input.Keys.S,
-                Input.Keys.SPACE,
-                -30,
-                0,
-                "projectile2.png");
-
-        int random2 = (int) (Math.random() * 5);
-        while (random == random2) {
-            random2 = (int) (Math.random() * 5);
-        }
-        characters[1] = new Character("character2.png",
-                80,
-                60,
-                CHARACTER_SPEED,
-                platforms[random2].getSpawnX(CHARACTER_WIDTH),
-                platforms[random2].getSpawnY(),
-                0.8,
-                Input.Keys.UP,
-                Input.Keys.LEFT,
-                Input.Keys.RIGHT,
-                Input.Keys.DOWN,
-                Input.Keys.ALT_RIGHT,
-                0,
-                0,
-                "projectile.png");
-    }
-
-    private void reset() {
-        setCharacters();
-        createPlayButton();
-        if (explode != null && explode.isActive()) {
-            explode = null;
-        }
     }
 
     private void createPlayButton() {
@@ -143,6 +95,33 @@ public class MyGame extends ApplicationAdapter {
         stage.addActor(playButton);
     }
 
+    private void setPlatforms() {
+        platforms[0] = new Platform("platform.png", PLATFORM_WIDTH, PLATFORM_HEIGHT, 5, 50, 50, 5);
+        platforms[1] = new Platform("small_platform.png", 1578, 201, 10, 25, 15, 1);
+        platforms[2] = new Platform("small_platform.png", 1578, 201, 10, 25, 85, 1);
+        platforms[3] = new Platform("small_platform.png", 1578, 201, 10, 75, 85, 1);
+        platforms[4] = new Platform("small_platform.png", 1578, 201, 10, 75, 15, 1);
+    }
+
+    private void setCharacters() {
+        int random = (int) (Math.random() * 5);
+        characters[0] = new Character("character1.png", 420, 360, CHARACTER_SPEED, platforms[random].getSpawnX(CHARACTER_WIDTH), platforms[random].getSpawnY(), 4, Input.Keys.W, Input.Keys.A, Input.Keys.D, Input.Keys.S, Input.Keys.SPACE, -30, 0, "projectile2.png");
+
+        int random2 = (int) (Math.random() * 5);
+        while (random == random2) {
+            random2 = (int) (Math.random() * 5);
+        }
+        characters[1] = new Character("character2.png", 80, 60, CHARACTER_SPEED, platforms[random2].getSpawnX(CHARACTER_WIDTH), platforms[random2].getSpawnY(), 0.8, Input.Keys.UP, Input.Keys.LEFT, Input.Keys.RIGHT, Input.Keys.DOWN, Input.Keys.ALT_RIGHT, 0, 0, "projectile.png");
+    }
+
+    private void reset() {
+        setCharacters();
+        createPlayButton();
+        if (explode != null && explode.isActive()) {
+            explode = null;
+        }
+    }
+
 
     private void renderBackground(float dt) {
         elapsed += dt * 0.5;
@@ -153,21 +132,27 @@ public class MyGame extends ApplicationAdapter {
 
     private void renderBackgroundMenu(float dt) {
         renderBackground(dt);
+        renderPlayButton();
+        renderPlayer1Controls();
+        renderPlayer2Controls();
+    }
+
+    private void renderPlayButton() {
         float height = (float) menuButtonShape.getHeight() / 8;
         float width = (float) menuButtonShape.getWidth() / 8;
-        batch.draw(menuButtonShape,
-                ((float) Gdx.graphics.getWidth() / 2) - (width / 2),
-                ((float) Gdx.graphics.getHeight() / 2) - (height / 2), width, height);
+        batch.draw(menuButtonShape, ((float) Gdx.graphics.getWidth() / 2) - (width / 2), ((float) Gdx.graphics.getHeight() / 2) - (height / 2), width, height);
+    }
 
-        height = (float) player1controls.getHeight() * 3;
-        width = (float) player1controls.getWidth() * 3;
-        batch.draw(player1controls,
-                30, Gdx.graphics.getHeight() - height - 30, width, height);
+    private void renderPlayer1Controls() {
+        float height = (float) player1controls.getHeight() * 3;
+        float width = (float) player1controls.getWidth() * 3;
+        batch.draw(player1controls, 30, Gdx.graphics.getHeight() - height - 30, width, height);
+    }
 
-        height = (float) player2controls.getHeight() * 3;
-        width = (float) player2controls.getWidth() * 3;
-        batch.draw(player2controls,
-                Gdx.graphics.getWidth() - width - 30, Gdx.graphics.getHeight() - height - 30, width, height);
+    private void renderPlayer2Controls() {
+        float height = (float) player2controls.getHeight() * 3;
+        float width = (float) player2controls.getWidth() * 3;
+        batch.draw(player2controls, Gdx.graphics.getWidth() - width - 30, Gdx.graphics.getHeight() - height - 30, width, height);
     }
 
     private void renderPlatforms(float dt) {
@@ -177,10 +162,7 @@ public class MyGame extends ApplicationAdapter {
         }
     }
 
-    private void updateCharacters(float dt) {
-        for (Character c : characters) {
-            c.update(dt, platforms);
-        }
+    private void killPlayersHitByProjectiles() {
         States state = new States(characters);
         for (Character hc : state.getCharactersHitByProjectile()) {
             hc.kill();
@@ -193,7 +175,11 @@ public class MyGame extends ApplicationAdapter {
             int random = (int) (Math.random() * 5);
             hc.setSpawn(platforms[random].getSpawnX(CHARACTER_WIDTH), platforms[random].getSpawnY());
         }
+        // also clear projectiles that hit together
+        state.clear();
+    }
 
+    private void killPlayersWhoFelt() {
         for (Character c : characters) {
             if (c.getPositionY() <= 0) {
                 c.kill();
@@ -207,6 +193,15 @@ public class MyGame extends ApplicationAdapter {
                 c.setSpawn(platforms[random].getSpawnX(CHARACTER_WIDTH), platforms[random].getSpawnY());
             }
         }
+    }
+
+    private void updateCharacters(float dt) {
+        for (Character c : characters) {
+            c.update(dt, platforms);
+        }
+
+        killPlayersHitByProjectiles();
+        killPlayersWhoFelt();
     }
 
     private void renderCharacters() {
@@ -243,13 +238,13 @@ public class MyGame extends ApplicationAdapter {
             renderCharacters();
 
             batch.end();
-        } else {
-            batch.begin();
-            renderBackgroundMenu(dt);
-            batch.end();
-            stage.act(dt);
-            stage.draw();
+            return;
         }
+        batch.begin();
+        renderBackgroundMenu(dt);
+        batch.end();
+        stage.act(dt);
+        stage.draw();
     }
 
     @Override

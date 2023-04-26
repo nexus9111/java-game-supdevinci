@@ -21,26 +21,33 @@ public class States {
         // kill characters hit by projectile
         for (Projectile projectile : this.projectiles) {
             for (Character character : this.characters) {
-                if (projectile.getX() >= character.getPositionX() &&
-                        projectile.getX() <= character.getPositionX() + character.getWidth() + character.getOffsetX() &&
-                        projectile.getY() >= character.getPositionY() &&
-                        projectile.getY() <= character.getPositionY() + character.getHeight() &&
-                        !character.hasProjectile(projectile)) {
+                if (projectile.getX() >= character.getPositionX() && projectile.getX() <= character.getPositionX() + character.getWidth() + character.getOffsetX() && projectile.getY() >= character.getPositionY() && projectile.getY() <= character.getPositionY() + character.getHeight() && !character.hasProjectile(projectile)) {
                     charactersHitByProjectile.add(character);
                     projectilesToRemove.add(projectile);
                 }
             }
         }
 
-        // if two projectiles hit together, remove them both
+        removeProjectiles(projectilesToRemove);
+        return charactersHitByProjectile;
+    }
+
+    public void clear() {
+        clearProjectiles();
+    }
+
+    /**
+     * Removes all projectiles that collide with each other from the game.
+     */
+    private void clearProjectiles() {
+        List<Projectile> projectilesToRemove = new java.util.ArrayList<>();
         for (Projectile projectile : this.projectiles) {
             for (Projectile projectile2 : this.projectiles) {
-                if (projectile != projectile2 &&
-                        projectile.getX() <= projectile2.getX() + projectile2.getWidth() &&
-                        projectile.getX() >= projectile2.getX() &&
-                        projectile.getY() <= projectile2.getY() + projectile2.getHeight() &&
-                        projectile.getY() >= projectile2.getY() &&
-                        projectile.isLeft() != projectile2.isLeft()) {
+                boolean isDifferent = projectile != projectile2;
+                boolean hasHitHorizontally = projectile.getX() <= projectile2.getX() + projectile2.getWidth() && projectile.getX() >= projectile2.getX();
+                boolean hasHitVertically = projectile.getY() <= projectile2.getY() + projectile2.getHeight() && projectile.getY() >= projectile2.getY();
+                boolean isDifferentDirection = projectile.isLeft() != projectile2.isLeft();
+                if ( isDifferent && hasHitHorizontally && hasHitVertically && isDifferentDirection) {
                     if (!projectilesToRemove.contains(projectile)) {
                         projectilesToRemove.add(projectile);
                     }
@@ -51,6 +58,10 @@ public class States {
             }
         }
 
+        removeProjectiles(projectilesToRemove);
+    }
+
+    private void removeProjectiles(List<Projectile> projectilesToRemove) {
         // remove projectiles used
         for (Character character : this.characters) {
             for (Projectile projectile : projectilesToRemove) {
@@ -59,7 +70,5 @@ public class States {
                 }
             }
         }
-
-        return charactersHitByProjectile;
     }
 }

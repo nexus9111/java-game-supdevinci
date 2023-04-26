@@ -3,6 +3,7 @@ package com.platformer.game;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
@@ -19,7 +20,6 @@ import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.platformer.game.models.Character;
 import com.platformer.game.models.*;
-import com.badlogic.gdx.audio.Music;
 
 
 public class MyGame extends ApplicationAdapter {
@@ -28,6 +28,8 @@ public class MyGame extends ApplicationAdapter {
     private final static int CHARACTER_WIDTH = 64;
     private final static int PLATFORM_WIDTH = 1998;
     private final static int PLATFORM_HEIGHT = 917;
+    private final static int BACKGROUND_COUNT = 6;
+
     private final Character[] characters = new Character[2];
     private final Platform[] platforms = new Platform[5];
     private SpriteBatch batch;
@@ -42,9 +44,13 @@ public class MyGame extends ApplicationAdapter {
     private Texture player2controls;
     private Animation<TextureRegion> dynamicBackground;
     private TextButton playButton;
+    private final Animation<TextureRegion>[] backgrounds = new Animation[BACKGROUND_COUNT];
+    private TextButton prevBackgroundButton;
+    private TextButton nextBackgroundButton;
+    private int currentBackgroundIndex = 0;
 
-    private Music menuMusic; // Add this variable for menu music
-    private Music gameMusic; // Add this variable for game music
+    private Music menuMusic;
+    private Music gameMusic;
 
     private void loadTextures() {
         menuButtonShape = new Texture("buttonshape.png");
@@ -63,17 +69,70 @@ public class MyGame extends ApplicationAdapter {
     @Override
     public void create() {
         loadTextures();
-        loadMusic();
         setPlatforms();
         setCharacters();
         setBackground();
         setPlayButton();
+        setBackgroundButtons();
+        loadMusic();
 
         batch = new SpriteBatch();
     }
 
     private void setBackground() {
-        dynamicBackground = GifDecoder.loadGIFAnimation(Animation.PlayMode.LOOP, Gdx.files.internal("background2.gif").read());
+        for (int i = 0; i < BACKGROUND_COUNT; i++) {
+            backgrounds[i] = GifDecoder.loadGIFAnimation(Animation.PlayMode.LOOP, Gdx.files.internal("background" + (i + 1) + ".gif").read());
+        }
+
+        dynamicBackground = backgrounds[currentBackgroundIndex];
+    }
+
+    private void setBackgroundButtons() {
+        prevBackgroundButton = createTriangleButton(true);
+        prevBackgroundButton.setPosition(playButton.getX() - prevBackgroundButton.getWidth() - 30, playButton.getY());
+        nextBackgroundButton = createTriangleButton(false);
+        nextBackgroundButton.setPosition(playButton.getX() + playButton.getWidth() + 30, playButton.getY());
+
+        prevBackgroundButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                currentBackgroundIndex--;
+                if (currentBackgroundIndex < 0) {
+                    currentBackgroundIndex = backgrounds.length - 1;
+                }
+                dynamicBackground = backgrounds[currentBackgroundIndex];
+            }
+        });
+
+        nextBackgroundButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                currentBackgroundIndex++;
+                if (currentBackgroundIndex >= backgrounds.length) {
+                    currentBackgroundIndex = 0;
+                }
+                dynamicBackground = backgrounds[currentBackgroundIndex];
+            }
+        });
+
+        stage.addActor(prevBackgroundButton);
+        stage.addActor(nextBackgroundButton);
+    }
+
+    private TextButton createTriangleButton(boolean isLeft) {
+        Skin skin = new Skin();
+        BitmapFont font = new BitmapFont();
+        skin.add("default", font);
+
+        TextButtonStyle textButtonStyle = new TextButtonStyle();
+        textButtonStyle.font = skin.getFont("default");
+        textButtonStyle.fontColor = Color.WHITE;
+        textButtonStyle.overFontColor = Color.LIGHT_GRAY;
+        textButtonStyle.downFontColor = Color.DARK_GRAY;
+
+        String buttonText = isLeft ? "<" : ">";
+        TextButton triangleButton = new TextButton(buttonText, textButtonStyle);
+        return triangleButton;
     }
 
     private void setPlayButton() {
@@ -119,12 +178,12 @@ public class MyGame extends ApplicationAdapter {
     }
 
     private void setCharacters() {
-        int random = (int) (Math.random() * 5);
+        int random = (int) (Math.random() * platforms.length);
         characters[0] = new Character("character1.png", 420, 360, CHARACTER_SPEED, platforms[random].getSpawnX(CHARACTER_WIDTH), platforms[random].getSpawnY(), 4, Input.Keys.W, Input.Keys.A, Input.Keys.D, Input.Keys.S, Input.Keys.SPACE, -30, 0, "projectile2.png");
 
-        int random2 = (int) (Math.random() * 5);
+        int random2 = (int) (Math.random() * platforms.length);
         while (random == random2) {
-            random2 = (int) (Math.random() * 5);
+            random2 = (int) (Math.random() * platforms.length);
         }
         characters[1] = new Character("character2.png", 80, 60, CHARACTER_SPEED, platforms[random2].getSpawnX(CHARACTER_WIDTH), platforms[random2].getSpawnY(), 0.8, Input.Keys.UP, Input.Keys.LEFT, Input.Keys.RIGHT, Input.Keys.DOWN, Input.Keys.ALT_RIGHT, 0, 0, "projectile.png");
     }
@@ -139,7 +198,7 @@ public class MyGame extends ApplicationAdapter {
 
 
     private void renderBackground(float dt) {
-        elapsed += dt * 0.5;
+        elapsed += dt * 0.8;
         float screenWidth = Gdx.graphics.getWidth();
         float screenHeight = Gdx.graphics.getHeight();
         batch.draw(dynamicBackground.getKeyFrame(elapsed), 0f, 0f, screenWidth, screenHeight);
@@ -148,8 +207,8 @@ public class MyGame extends ApplicationAdapter {
     private void renderBackgroundMenu(float dt) {
         renderBackground(dt);
         renderPlayButton();
-        renderPlayer1Controls();
-        renderPlayer2Controls();
+        renderPlayerControls(player1controls, false);
+        renderPlayerControls(player2controls, true);
     }
 
     private void renderPlayButton() {
@@ -158,17 +217,14 @@ public class MyGame extends ApplicationAdapter {
         batch.draw(menuButtonShape, ((float) Gdx.graphics.getWidth() / 2) - (width / 2), ((float) Gdx.graphics.getHeight() / 2) - (height / 2), width, height);
     }
 
-    private void renderPlayer1Controls() {
-        float height = (float) player1controls.getHeight() * 3;
-        float width = (float) player1controls.getWidth() * 3;
-        batch.draw(player1controls, 30, Gdx.graphics.getHeight() - height - 30, width, height);
+    private void renderPlayerControls(Texture playercontrols, boolean isLeft) {
+        float height = (float) playercontrols.getHeight() * 3;
+        float width = (float) playercontrols.getWidth() * 3;
+        float posX = isLeft ? Gdx.graphics.getWidth() - width - 30 : 30;
+        float posY = Gdx.graphics.getHeight() - height - 30;
+        batch.draw(playercontrols, posX, posY, width, height);
     }
 
-    private void renderPlayer2Controls() {
-        float height = (float) player2controls.getHeight() * 3;
-        float width = (float) player2controls.getWidth() * 3;
-        batch.draw(player2controls, Gdx.graphics.getWidth() - width - 30, Gdx.graphics.getHeight() - height - 30, width, height);
-    }
 
     private void renderPlatforms(float dt) {
         platformAnimTime += dt;

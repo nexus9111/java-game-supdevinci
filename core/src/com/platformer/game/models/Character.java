@@ -53,7 +53,6 @@ public class Character implements ICharacter {
     private float time = .0f;
     private float velocityY = 0;
 
-
     /**
      * Constructs a Character object.
      *

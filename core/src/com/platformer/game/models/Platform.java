@@ -9,6 +9,7 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 public class Platform {
     private int PLATFORM_FRAME;
     private final float PLATFORM_ANIM_SPEED = .3f;
+    private final int PLATFORM_TOP_HITBOX = 15;
 
     private final float width;
     private final float height;
@@ -73,8 +74,8 @@ public class Platform {
     public boolean isCharacterOnIt(float characterX, float characterY, float characterWidth, float characterHeight) {
         return characterX + (characterWidth / 2) > this.positionX &&
                 characterX < this.positionX + this.width &&
-                characterY >= this.positionY + this.height - 8 &&
-                characterY <= this.positionY + this.height + 8;
+                characterY >= this.positionY + this.height - PLATFORM_TOP_HITBOX &&
+                characterY <= this.positionY + this.height + PLATFORM_TOP_HITBOX;
     }
 
     public float getSpawnX(int width) {

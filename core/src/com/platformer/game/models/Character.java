@@ -191,7 +191,6 @@ public class Character {
     }
 
     private void updateCharacter(float dt, Platform[] platforms) {
-        int dx = isMoving();
         isJumping();
         isShooting();
 
@@ -207,8 +206,8 @@ public class Character {
         updateJumpStatus();
 
         // Update character's horizontal position
+        int dx = isMoving();
         positionX += dx * this.speed * dt;
-
         determineNextAnimationState(dx);
 
         time += dt;

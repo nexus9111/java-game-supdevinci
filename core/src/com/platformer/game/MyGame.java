@@ -19,11 +19,12 @@ import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.platformer.game.models.Character;
-import com.platformer.game.models.*;
-
+import com.platformer.game.models.Platform;
+import com.platformer.game.models.Explode;
+import com.platformer.game.models.States;
+import com.platformer.game.models.GifDecoder;
 
 public class MyGame extends ApplicationAdapter {
-
     private final static float CHARACTER_SPEED = 150f;
     private final static int CHARACTER_WIDTH = 64;
     private final static int PLATFORM_WIDTH = 1998;
@@ -32,6 +33,7 @@ public class MyGame extends ApplicationAdapter {
 
     private final Character[] characters = new Character[2];
     private final Platform[] platforms = new Platform[5];
+
     private SpriteBatch batch;
     private float elapsed;
     private Explode explode;
@@ -39,15 +41,14 @@ public class MyGame extends ApplicationAdapter {
     private float platformAnimTime = 0f;
     private Skin skin;
     private Stage stage;
+    private int currentBackgroundIndex = 0;
+
     private Texture menuButtonShape;
     private Texture player1controls;
     private Texture player2controls;
-    private Animation<TextureRegion> dynamicBackground;
     private TextButton playButton;
     private final Animation<TextureRegion>[] backgrounds = new Animation[BACKGROUND_COUNT];
-    private TextButton prevBackgroundButton;
-    private TextButton nextBackgroundButton;
-    private int currentBackgroundIndex = 0;
+    private Animation<TextureRegion> dynamicBackground;
 
     private Music menuMusic;
     private Music gameMusic;
@@ -66,31 +67,42 @@ public class MyGame extends ApplicationAdapter {
         gameMusic.setLooping(true);
     }
 
-    @Override
-    public void create() {
-        loadTextures();
-        setPlatforms();
-        setCharacters();
-        setBackground();
-        setPlayButton();
-        setBackgroundButtons();
-        loadMusic();
+    private void setCharacters() {
+        int random = (int) (Math.random() * platforms.length);
+        characters[0] = new Character("character1.png", 420, 360, CHARACTER_SPEED, platforms[random].getSpawnX(CHARACTER_WIDTH), platforms[random].getSpawnY(), 4, Input.Keys.W, Input.Keys.A, Input.Keys.D, Input.Keys.S, Input.Keys.SPACE, -30, 0, "projectile2.png");
 
-        batch = new SpriteBatch();
+        int random2 = (int) (Math.random() * platforms.length);
+        while (random == random2) {
+            random2 = (int) (Math.random() * platforms.length);
+        }
+        characters[1] = new Character("character2.png", 80, 60, CHARACTER_SPEED, platforms[random2].getSpawnX(CHARACTER_WIDTH), platforms[random2].getSpawnY(), 0.8, Input.Keys.UP, Input.Keys.LEFT, Input.Keys.RIGHT, Input.Keys.DOWN, Input.Keys.ALT_RIGHT, 0, 0, "projectile.png");
+    }
+
+    private void setPlatforms() {
+        platforms[0] = new Platform("platform.png", PLATFORM_WIDTH, PLATFORM_HEIGHT, 5, 50, 50, 5);
+        platforms[1] = new Platform("small_platform.png", 1578, 201, 10, 25, 15, 1);
+        platforms[2] = new Platform("small_platform.png", 1578, 201, 10, 25, 85, 1);
+        platforms[3] = new Platform("small_platform.png", 1578, 201, 10, 75, 85, 1);
+        platforms[4] = new Platform("small_platform.png", 1578, 201, 10, 75, 15, 1);
     }
 
     private void setBackground() {
         for (int i = 0; i < BACKGROUND_COUNT; i++) {
             backgrounds[i] = GifDecoder.loadGIFAnimation(Animation.PlayMode.LOOP, Gdx.files.internal("background" + (i + 1) + ".gif").read());
         }
-
         dynamicBackground = backgrounds[currentBackgroundIndex];
     }
 
+    private void setPlayButton() {
+        stage = new Stage(new ScreenViewport());
+        createPlayButton();
+        Gdx.input.setInputProcessor(stage);
+    }
+
     private void setBackgroundButtons() {
-        prevBackgroundButton = createTriangleButton(true);
+        TextButton prevBackgroundButton = createTriangleButton(true);
         prevBackgroundButton.setPosition(playButton.getX() - prevBackgroundButton.getWidth() - 30, playButton.getY());
-        nextBackgroundButton = createTriangleButton(false);
+        TextButton nextBackgroundButton = createTriangleButton(false);
         nextBackgroundButton.setPosition(playButton.getX() + playButton.getWidth() + 30, playButton.getY());
 
         prevBackgroundButton.addListener(new ClickListener() {
@@ -120,37 +132,14 @@ public class MyGame extends ApplicationAdapter {
     }
 
     private TextButton createTriangleButton(boolean isLeft) {
-        Skin skin = new Skin();
-        BitmapFont font = new BitmapFont();
-        skin.add("default", font);
-
-        TextButtonStyle textButtonStyle = new TextButtonStyle();
-        textButtonStyle.font = skin.getFont("default");
-        textButtonStyle.fontColor = Color.WHITE;
-        textButtonStyle.overFontColor = Color.LIGHT_GRAY;
-        textButtonStyle.downFontColor = Color.DARK_GRAY;
+        TextButtonStyle textButtonStyle = createTextButtonStyle();
 
         String buttonText = isLeft ? "<" : ">";
-        TextButton triangleButton = new TextButton(buttonText, textButtonStyle);
-        return triangleButton;
-    }
-
-    private void setPlayButton() {
-        stage = new Stage(new ScreenViewport());
-        createPlayButton();
-        Gdx.input.setInputProcessor(stage);
+        return new TextButton(buttonText, textButtonStyle);
     }
 
     private void createPlayButton() {
-        Skin skin = new Skin();
-        BitmapFont font = new BitmapFont();
-        skin.add("default", font);
-
-        TextButtonStyle textButtonStyle = new TextButtonStyle();
-        textButtonStyle.font = skin.getFont("default");
-        textButtonStyle.fontColor = Color.WHITE;
-        textButtonStyle.overFontColor = Color.LIGHT_GRAY;
-        textButtonStyle.downFontColor = Color.DARK_GRAY;
+        TextButtonStyle textButtonStyle = createTextButtonStyle();
 
         playButton = new TextButton("Jouer", textButtonStyle);
         playButton.setPosition((float) Gdx.graphics.getWidth() / 2 - playButton.getWidth() / 2, (float) Gdx.graphics.getHeight() / 2 - playButton.getHeight() / 2);
@@ -169,23 +158,18 @@ public class MyGame extends ApplicationAdapter {
         stage.addActor(playButton);
     }
 
-    private void setPlatforms() {
-        platforms[0] = new Platform("platform.png", PLATFORM_WIDTH, PLATFORM_HEIGHT, 5, 50, 50, 5);
-        platforms[1] = new Platform("small_platform.png", 1578, 201, 10, 25, 15, 1);
-        platforms[2] = new Platform("small_platform.png", 1578, 201, 10, 25, 85, 1);
-        platforms[3] = new Platform("small_platform.png", 1578, 201, 10, 75, 85, 1);
-        platforms[4] = new Platform("small_platform.png", 1578, 201, 10, 75, 15, 1);
-    }
+    private TextButtonStyle createTextButtonStyle() {
+        Skin skin = new Skin();
+        BitmapFont font = new BitmapFont();
+        skin.add("default", font);
 
-    private void setCharacters() {
-        int random = (int) (Math.random() * platforms.length);
-        characters[0] = new Character("character1.png", 420, 360, CHARACTER_SPEED, platforms[random].getSpawnX(CHARACTER_WIDTH), platforms[random].getSpawnY(), 4, Input.Keys.W, Input.Keys.A, Input.Keys.D, Input.Keys.S, Input.Keys.SPACE, -30, 0, "projectile2.png");
+        TextButtonStyle textButtonStyle = new TextButtonStyle();
+        textButtonStyle.font = skin.getFont("default");
+        textButtonStyle.fontColor = Color.WHITE;
+        textButtonStyle.overFontColor = Color.LIGHT_GRAY;
+        textButtonStyle.downFontColor = Color.DARK_GRAY;
 
-        int random2 = (int) (Math.random() * platforms.length);
-        while (random == random2) {
-            random2 = (int) (Math.random() * platforms.length);
-        }
-        characters[1] = new Character("character2.png", 80, 60, CHARACTER_SPEED, platforms[random2].getSpawnX(CHARACTER_WIDTH), platforms[random2].getSpawnY(), 0.8, Input.Keys.UP, Input.Keys.LEFT, Input.Keys.RIGHT, Input.Keys.DOWN, Input.Keys.ALT_RIGHT, 0, 0, "projectile.png");
+        return textButtonStyle;
     }
 
     private void reset() {
@@ -293,6 +277,19 @@ public class MyGame extends ApplicationAdapter {
         if (explode != null && explode.isActive()) {
             explode.render(batch);
         }
+    }
+
+    @Override
+    public void create() {
+        loadTextures();
+        setPlatforms();
+        setCharacters();
+        setBackground();
+        setPlayButton();
+        setBackgroundButtons();
+        loadMusic();
+
+        batch = new SpriteBatch();
     }
 
     @Override

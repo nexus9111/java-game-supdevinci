@@ -31,15 +31,18 @@ public class Character {
     private final String projectileFile;
     private final float speed;
     private final int width;
+
     // textures
     private final Texture texture;
     private final Texture heartTexture;
     private final TextureRegion[][] animationInstances;
     private final Animation<TextureRegion>[] animation;
     private final List<Projectile> projectiles = new java.util.ArrayList<>();
+
     // variables
     private float positionY;
     private float positionX;
+
     // states
     private int animationState = -1;
     private boolean isLeftLooking = true;

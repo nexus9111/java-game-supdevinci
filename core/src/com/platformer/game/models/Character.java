@@ -9,7 +9,7 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import java.util.Iterator;
 import java.util.List;
 
-public class Character {
+public class Character implements ICharacter {
     // constants
     private final float ANIMATION_SPEED = .1f;
     private final float FAST_FALL_FORCE = -4_000f;
@@ -292,6 +292,4 @@ public class Character {
             batch.draw(this.heartTexture, heartPositionX + (i * 20), this.positionY + this.height + 5, 15, 15);
         }
     }
-
-
 }

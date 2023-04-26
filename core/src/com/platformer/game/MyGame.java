@@ -19,6 +19,7 @@ import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.platformer.game.models.Character;
 import com.platformer.game.models.*;
+import com.badlogic.gdx.audio.Music;
 
 
 public class MyGame extends ApplicationAdapter {
@@ -42,15 +43,27 @@ public class MyGame extends ApplicationAdapter {
     private Animation<TextureRegion> dynamicBackground;
     private TextButton playButton;
 
+    private Music menuMusic; // Add this variable for menu music
+    private Music gameMusic; // Add this variable for game music
+
     private void loadTextures() {
         menuButtonShape = new Texture("buttonshape.png");
         player1controls = new Texture("player1.png");
         player2controls = new Texture("player2.png");
     }
 
+    private void loadMusic() { // Add this method to load the music files
+        menuMusic = Gdx.audio.newMusic(Gdx.files.internal("menu_sound.wav"));
+        menuMusic.setLooping(true);
+        menuMusic.play();
+        gameMusic = Gdx.audio.newMusic(Gdx.files.internal("battle_sound.wav"));
+        gameMusic.setLooping(true);
+    }
+
     @Override
     public void create() {
         loadTextures();
+        loadMusic();
         setPlatforms();
         setCharacters();
         setBackground();
@@ -87,6 +100,8 @@ public class MyGame extends ApplicationAdapter {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 gameStarted = true;
+                menuMusic.stop();
+                gameMusic.play();
                 reset();
                 playButton.remove();
             }
@@ -170,6 +185,8 @@ public class MyGame extends ApplicationAdapter {
             explode.activate();
             if (hc.getLives() <= 0) {
                 gameStarted = false;
+                gameMusic.stop();
+                menuMusic.play();
                 return;
             }
             int random = (int) (Math.random() * 5);

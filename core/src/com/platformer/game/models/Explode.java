@@ -10,6 +10,8 @@ public class Explode {
     private final Texture txExplosion;
     private final TextureRegion[][] txrExplosionTile;
     private final Animation<TextureRegion>[] animExplosion;
+    private final double EXPOLSION_REDUCTION_RATIO = 0.6;
+
     private boolean isVisible = false;
     private float time = .0f;
     private int x, y;
@@ -46,7 +48,7 @@ public class Explode {
 
     public void render(SpriteBatch batch) {
         if (this.isVisible) {
-            batch.draw(this.animExplosion[0].getKeyFrame(time, false), this.x - ((float) this.width / 2), this.y - 20, 480, 480);
+            batch.draw(this.animExplosion[0].getKeyFrame(time, false), this.x - ((float) (int) (this.width * EXPOLSION_REDUCTION_RATIO) / 2), this.y - 20, (int) (this.width * EXPOLSION_REDUCTION_RATIO), (int) (this.height * EXPOLSION_REDUCTION_RATIO));
             // if no more frames, hide
             if (this.animExplosion[0].isAnimationFinished(time)) {
                 this.isVisible = false;

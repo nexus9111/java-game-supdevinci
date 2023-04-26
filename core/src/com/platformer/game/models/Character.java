@@ -120,7 +120,9 @@ public class Character {
     }
 
     public void update(float dt, Platform[] platforms) {
+        time += dt;
         updateCharacter(dt, platforms);
+        updateProjectiles(dt);
     }
 
     public void setSpawn(float x, float y) {
@@ -209,11 +211,7 @@ public class Character {
         int dx = isMoving();
         positionX += dx * this.speed * dt;
         determineNextAnimationState(dx);
-
-        time += dt;
-
         isOnAPlatform(platforms, fastFallUsed);
-        updateProjectiles(dt);
     }
 
     private void updateProjectiles(float dt) {
@@ -285,8 +283,10 @@ public class Character {
         TextureRegion characterTexture = animationState < 0 ? animationInstances[lastValidAnimationIndex][0] : animation[lastValidAnimationIndex = animationState].getKeyFrame(this.time, true);
         batch.draw(characterTexture, this.positionX - 20, this.positionY, this.width, this.height);
 
+        int heartSize = this.lives * this.heartTexture.getWidth() + (this.lives - 1) * 20;
+        float heartPositionX = this.positionX + (this.width + this.offsetX) / 2 - heartSize / 2;
         for (int i = 0; i < this.lives; i++) {
-            batch.draw(this.heartTexture, this.positionX + (i * 20), this.positionY + this.height + 5, 15, 15);
+            batch.draw(this.heartTexture, heartPositionX + (i * 20), this.positionY + this.height + 5, 15, 15);
         }
     }
 

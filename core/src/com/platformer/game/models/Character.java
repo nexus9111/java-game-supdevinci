@@ -20,11 +20,7 @@ public class Character implements ICharacter {
     private final int POSSIBLE_DIRECTIONS = 4;
 
     // controls
-    private final int keyDown;
-    private final int keyJump;
-    private final int keyLeft;
-    private final int keyRight;
-    private final int keyShoot;
+    private final Controles controles;
     private final int height;
     private final int offsetX;
     private final int offsetY;
@@ -53,28 +49,8 @@ public class Character implements ICharacter {
     private float time = .0f;
     private float velocityY = 0;
 
-    /**
-     * Constructs a Character object.
-     *
-     * @param fileName        the file name of the texture
-     * @param characterWidth  the width of the character in pixels (in the source image)
-     * @param characterHeight the height of the character in pixels (in the source image)
-     * @param characterSpeed  the speed of the character
-     * @param percentToLeft   the percentage of the screen to place the character from the left
-     * @param percentToBottom the percentage of the screen to place the character from the bottom
-     * @param scale           the scale of the character (the size will be divided by this number)
-     * @param jumpKey         the key to jump
-     * @param leftKey         the key to move left
-     * @param rightKey        the key to move right
-     * @param downKey         the key to move down
-     * @param shootKey        the key to shoot
-     * @param offsetX         the offset of the character in the x direction (the weight reduction or increase in case of character oversized background).
-     *                        Set to 0 if you don't want to change the weight of the character
-     * @param offsetY         the offset of the character in the y direction (the height reduction or increase in case of character oversized background)
-     *                        Set to 0 if you don't want to change the weight of the character
-     * @throws IllegalArgumentException if fileName is null, or if width, height, scale, percentToBottom, or percentToLeft is less than 0
-     */
-    public Character(String fileName, int characterWidth, int characterHeight, float characterSpeed, float percentToLeft, float percentToBottom, double scale, int jumpKey, int leftKey, int rightKey, int downKey, int shootKey, int offsetX, int offsetY, String projectileFile) {
+
+    public Character(String fileName, int characterWidth, int characterHeight, float characterSpeed, float percentToLeft, float percentToBottom, double scale, Controles controles, int offsetX, int offsetY, String projectileFile) {
         if (fileName == null) {
             throw new IllegalArgumentException("fileName cannot be null");
         }
@@ -88,11 +64,7 @@ public class Character implements ICharacter {
         this.speed = characterSpeed;
         this.positionX = percentToLeft;
         this.positionY = percentToBottom;
-        this.keyJump = jumpKey;
-        this.keyLeft = leftKey;
-        this.keyRight = rightKey;
-        this.keyDown = downKey;
-        this.keyShoot = shootKey;
+        this.controles = controles;
         this.offsetX = offsetX;
         this.offsetY = offsetY;
         this.projectileFile = projectileFile;
@@ -200,7 +172,7 @@ public class Character implements ICharacter {
 
         float gravityForce = GRAVITY;
         boolean fastFallUsed = false;
-        if (isJumping && Gdx.input.isKeyPressed(this.keyDown)) {
+        if (isJumping && Gdx.input.isKeyPressed(controles.getKeyDown())) {
             gravityForce += FAST_FALL_FORCE;
             fastFallUsed = true;
         }
@@ -252,8 +224,8 @@ public class Character implements ICharacter {
     }
 
     private int isMoving() {
-        if (Gdx.input.isKeyPressed(this.keyLeft) || Gdx.input.isKeyPressed(this.keyRight)) {
-            if (Gdx.input.isKeyPressed(this.keyLeft)) {
+        if (Gdx.input.isKeyPressed(controles.getKeyLeft()) || Gdx.input.isKeyPressed(controles.getKeyRight())) {
+            if (Gdx.input.isKeyPressed(controles.getKeyLeft())) {
                 this.isLeftLooking = true;
                 return -1;
             }
@@ -264,7 +236,7 @@ public class Character implements ICharacter {
     }
 
     private void isJumping() {
-        if (jumpCount < MAX_JUMP_COUNT && Gdx.input.isKeyJustPressed(this.keyJump)) {
+        if (jumpCount < MAX_JUMP_COUNT && Gdx.input.isKeyJustPressed(controles.getKeyJump())) {
             if (isJumping) {
                 jumpCount++;
             } else {
@@ -276,7 +248,7 @@ public class Character implements ICharacter {
     }
 
     private void isShooting() {
-        if (Gdx.input.isKeyJustPressed(this.keyShoot) && getRemainingProjectiles() > 0) {
+        if (Gdx.input.isKeyJustPressed(controles.getKeyShoot()) && getRemainingProjectiles() > 0) {
             projectiles.add(new Projectile(this, 45, 37, 500f, this.isLeftLooking, this.projectileFile));
         }
     }

@@ -18,11 +18,8 @@ import com.badlogic.gdx.scenes.scene2d.ui.TextButton.TextButtonStyle;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
+import com.platformer.game.models.*;
 import com.platformer.game.models.Character;
-import com.platformer.game.models.Platform;
-import com.platformer.game.models.Explode;
-import com.platformer.game.models.States;
-import com.platformer.game.models.GifDecoder;
 
 public class MyGame extends ApplicationAdapter {
     private final static float CHARACTER_SPEED = 150f;
@@ -30,7 +27,7 @@ public class MyGame extends ApplicationAdapter {
     private final static int PLATFORM_WIDTH = 1998;
     private final static int PLATFORM_HEIGHT = 917;
     private final static int BACKGROUND_COUNT = 6;
-    private final static boolean FUN_MUSIC = true;
+    private final static boolean FUN_MUSIC = false;
 
     private final Character[] characters = new Character[2];
     private final Platform[] platforms = new Platform[5];
@@ -70,13 +67,15 @@ public class MyGame extends ApplicationAdapter {
 
     private void setCharacters() {
         int random = (int) (Math.random() * platforms.length);
-        characters[0] = new Character("character1.png", 420, 360, CHARACTER_SPEED, platforms[random].getSpawnX(CHARACTER_WIDTH), platforms[random].getSpawnY(), 4, Input.Keys.W, Input.Keys.A, Input.Keys.D, Input.Keys.S, Input.Keys.SPACE, -30, 0, "projectile2.png");
+        Controles ctrlP1 = new Controles(Input.Keys.W, Input.Keys.S, Input.Keys.A, Input.Keys.D, Input.Keys.SPACE);
+        characters[0] = new Character("character1.png", 420, 360, CHARACTER_SPEED, platforms[random].getSpawnX(CHARACTER_WIDTH), platforms[random].getSpawnY(), 4, ctrlP1, -30, 0, "projectile2.png");
 
         int random2 = (int) (Math.random() * platforms.length);
         while (random == random2) {
             random2 = (int) (Math.random() * platforms.length);
         }
-        characters[1] = new Character("character2.png", 80, 60, CHARACTER_SPEED, platforms[random2].getSpawnX(CHARACTER_WIDTH), platforms[random2].getSpawnY(), 0.8, Input.Keys.UP, Input.Keys.LEFT, Input.Keys.RIGHT, Input.Keys.DOWN, Input.Keys.ALT_RIGHT, 0, 0, "projectile.png");
+        Controles ctrlP2 = new Controles(Input.Keys.UP, Input.Keys.DOWN, Input.Keys.LEFT, Input.Keys.RIGHT, Input.Keys.ALT_RIGHT);
+        characters[1] = new Character("character2.png", 80, 60, CHARACTER_SPEED, platforms[random2].getSpawnX(CHARACTER_WIDTH), platforms[random2].getSpawnY(), 0.8, ctrlP2, 0, 0, "projectile.png");
     }
 
     private void setPlatforms() {

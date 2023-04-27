@@ -255,8 +255,6 @@ public class MyGame extends ApplicationAdapter {
             public void clicked(InputEvent event, float x, float y) {
                 gameStarted = false;
                 winner = null;
-                menuMusic.stop();
-                gameMusic.play();
                 reset();
                 homeButton.remove();
                 currentPage = MENU_PAGE;

@@ -7,7 +7,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 
 public class Platform {
-    private int PLATFORM_FRAME;
+    private final int PLATFORM_FRAME;
     private final float PLATFORM_ANIM_SPEED = .3f;
     private final int PLATFORM_TOP_HITBOX = 15;
 
@@ -83,6 +83,6 @@ public class Platform {
     }
 
     public float getSpawnY() {
-        return this.positionY + this.height + 20;
+        return this.positionY + this.height + 100;
     }
 }

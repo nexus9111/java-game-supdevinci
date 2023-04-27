@@ -17,7 +17,7 @@ public class Character implements ICharacter {
     private final int MAX_PROJECTILES_COUNT = 5;
     private final int MAX_JUMP_COUNT = 2;
     private final int POSSIBLE_DIRECTIONS = 4;
-    
+
     // controls
     private final Controles controles;
     private final int height;
@@ -267,3 +267,4 @@ public class Character implements ICharacter {
         return animationInstances[0][0];
     }
 }
+

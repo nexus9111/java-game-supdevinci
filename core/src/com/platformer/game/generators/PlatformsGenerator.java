@@ -43,6 +43,13 @@ public class PlatformsGenerator {
         platforms.add(new PlatformObject("small_platform2.png", 481, 60, 3, 35, 85, 1, 1));
         platforms.add(new PlatformObject("small_platform2.png", 481, 60, 3, 70, 50, 1, 1));
 
+        platforms.add(new PlatformObject("small_platform3.png", 525, 1456, 3, 30, 5, 1, 2));
+        platforms.add(new PlatformObject("small_platform3.png", 525, 1456, 3, 15, 28, 1, 2));
+        platforms.add(new PlatformObject("small_platform3.png", 525, 1456, 3, 0, 50, 1, 2));
+        platforms.add(new PlatformObject("small_platform3.png", 525, 1456, 3, 15, 72, 1, 2));
+        platforms.add(new PlatformObject("small_platform3.png", 525, 1456, 3, 30, 95, 1, 2));
+        platforms.add(new PlatformObject("small_platform1.png", 1578, 201, 5, 75, 50, 1, 2));
+
         platforms.add(new PlatformObject("small_platform6.png", 1171, 169, 7, 35, 15, 1, 5));
         platforms.add(new PlatformObject("small_platform6.png", 1171, 169, 7, 35, 85, 1, 5));
         platforms.add(new PlatformObject("small_platform6.png", 1171, 169, 7, 20, 50, 1, 5));

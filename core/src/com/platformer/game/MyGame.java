@@ -61,7 +61,6 @@ public class MyGame extends ApplicationAdapter {
     private Music menuMusic;
     private Music gameMusic;
 
-
     /* -------------------------------------------------------------------------- */
     /*                               INITIALIZATION                               */
     /* -------------------------------------------------------------------------- */
@@ -92,7 +91,6 @@ public class MyGame extends ApplicationAdapter {
         gameMusic.setLooping(true);
     }
 
-
     /* -------------------------------------------------------------------------- */
     /*                                GAME SETTERS                                */
     /* -------------------------------------------------------------------------- */
@@ -112,7 +110,10 @@ public class MyGame extends ApplicationAdapter {
 
     private void setPlatforms() {
         PlatformsGenerator p = new PlatformsGenerator();
-        platforms = p.getAllPlatforms(0);
+        platforms = p.getAllPlatforms(currentBackgroundIndex);
+        if (platforms.length == 0) {
+            platforms = p.getAllPlatforms(0);
+        }
     }
 
     private void setBackground() {
@@ -125,7 +126,6 @@ public class MyGame extends ApplicationAdapter {
     /* -------------------------------------------------------------------------- */
     /*                                   BUTTONS                                  */
     /* -------------------------------------------------------------------------- */
-
 
     private void setMenuButtons() {
         stage = new Stage(new ScreenViewport());
@@ -317,6 +317,7 @@ public class MyGame extends ApplicationAdapter {
     }
 
     private void reset() {
+        setPlatforms();
         setCharacters();
         createPlayButton();
         createBackgroundSelectorButtons();

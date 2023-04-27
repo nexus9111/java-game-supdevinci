@@ -66,8 +66,7 @@ public class MyGame extends ApplicationAdapter {
         setPlatforms();
         setCharacters();
         setBackground();
-        setPlayButton();
-        setBackgroundSelectorButtons();
+        setMenuButtons();
         loadMusic();
         batch = new SpriteBatch();
     }
@@ -146,14 +145,15 @@ public class MyGame extends ApplicationAdapter {
         return textButtonStyle;
     }
 
-    /* ------------------------------- PLAY BUTTON ------------------------------ */
-
-    private void setPlayButton() {
+    private void setMenuButtons() {
         stage = new Stage(new ScreenViewport());
         createPlayButton();
+        setBackgroundSelectorButtons();
         Gdx.input.setInputProcessor(stage);
     }
 
+    /* ------------------------------- PLAY BUTTON ------------------------------ */
+    
     private void createPlayButton() {
         if (gameStarted || winner != null) {
             return;

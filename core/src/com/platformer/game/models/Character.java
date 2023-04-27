@@ -31,7 +31,7 @@ public class Character implements ICharacter {
     private final TextureRegion[][] animationInstances;
     private final Animation<TextureRegion>[] animation;
     private final List<Projectile> projectiles = new java.util.ArrayList<>();
-    private int LIVES_COUNT = 1;
+    private int LIVES_COUNT = 5;
     // variables
     private float positionY;
     private float positionX;

@@ -1,7 +1,6 @@
 package com.platformer.game.models;
 
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
 
 import java.util.List;
 

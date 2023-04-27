@@ -1,9 +1,7 @@
 package com.platformer.game.models;
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
-import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 
@@ -19,7 +17,6 @@ public class Character implements ICharacter {
     private final int MAX_PROJECTILES_COUNT = 5;
     private final int MAX_JUMP_COUNT = 2;
     private final int POSSIBLE_DIRECTIONS = 4;
-
     // controls
     private final Controles controles;
     private final int height;
@@ -28,14 +25,13 @@ public class Character implements ICharacter {
     private final String projectileFile;
     private final float speed;
     private final int width;
-
     // textures
     private final Texture texture;
     private final Texture heartTexture;
     private final TextureRegion[][] animationInstances;
     private final Animation<TextureRegion>[] animation;
     private final List<Projectile> projectiles = new java.util.ArrayList<>();
-
+    private int LIVES_COUNT = 1;
     // variables
     private float positionY;
     private float positionX;
@@ -46,7 +42,6 @@ public class Character implements ICharacter {
     private boolean isJumping = false;
     private int jumpCount = 0;
     private int lastValidAnimationIndex = 0;
-    private int lives = 5;
     private float time = .0f;
     private float velocityY = 0;
 
@@ -152,11 +147,11 @@ public class Character implements ICharacter {
     }
 
     public void kill() {
-        this.lives--;
+        this.LIVES_COUNT--;
     }
 
     public int getLives() {
-        return this.lives;
+        return this.LIVES_COUNT;
     }
 
     public float getPositionX() {
@@ -258,9 +253,9 @@ public class Character implements ICharacter {
         TextureRegion characterTexture = animationState < 0 ? animationInstances[lastValidAnimationIndex][0] : animation[lastValidAnimationIndex = animationState].getKeyFrame(this.time, true);
         batch.draw(characterTexture, this.positionX - 20, this.positionY, this.width, this.height);
 
-        int heartSize = this.lives * this.heartTexture.getWidth() + (this.lives - 1) * 20;
+        int heartSize = this.LIVES_COUNT * this.heartTexture.getWidth() + (this.LIVES_COUNT - 1) * 20;
         float heartPositionX = this.positionX + (this.width + this.offsetX) / 2 - heartSize / 2;
-        for (int i = 0; i < this.lives; i++) {
+        for (int i = 0; i < this.LIVES_COUNT; i++) {
             batch.draw(this.heartTexture, heartPositionX + (i * 20), this.positionY + this.height + 5, 15, 15);
         }
     }

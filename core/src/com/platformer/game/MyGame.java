@@ -18,8 +18,8 @@ import com.badlogic.gdx.scenes.scene2d.ui.TextButton.TextButtonStyle;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
-import com.platformer.game.models.*;
 import com.platformer.game.models.Character;
+import com.platformer.game.models.*;
 
 public class MyGame extends ApplicationAdapter {
     private final static float CHARACTER_SPEED = 150f;
@@ -31,7 +31,7 @@ public class MyGame extends ApplicationAdapter {
 
     private final Character[] characters = new Character[2];
     private final Platform[] platforms = new Platform[5];
-
+    private final Animation<TextureRegion>[] backgrounds = new Animation[BACKGROUND_COUNT];
     private SpriteBatch batch;
     private float elapsed;
     private Explode explode;
@@ -40,21 +40,43 @@ public class MyGame extends ApplicationAdapter {
     private Skin skin;
     private Stage stage;
     private int currentBackgroundIndex = 0;
-
     private Texture menuButtonShape;
     private Texture player1controls;
     private Texture player2controls;
+    private Texture winnerCup;
     private TextButton playButton;
-    private final Animation<TextureRegion>[] backgrounds = new Animation[BACKGROUND_COUNT];
+    private TextButton homeButton;
+    private TextButton prevBackgroundButton;
+    private TextButton nextBackgroundButton;
     private Animation<TextureRegion> dynamicBackground;
+
+    private Character winner = null;
 
     private Music menuMusic;
     private Music gameMusic;
+
+
+    /* -------------------------------------------------------------------------- */
+    /*                               INITIALIZATION                               */
+    /* -------------------------------------------------------------------------- */
+
+    @Override
+    public void create() {
+        loadTextures();
+        setPlatforms();
+        setCharacters();
+        setBackground();
+        setPlayButton();
+        setBackgroundSelectorButtons();
+        loadMusic();
+        batch = new SpriteBatch();
+    }
 
     private void loadTextures() {
         menuButtonShape = new Texture("buttonshape.png");
         player1controls = new Texture("player1.png");
         player2controls = new Texture("player2.png");
+        winnerCup = new Texture("winner_cup.png");
     }
 
     private void loadMusic() { // Add this method to load the music files
@@ -64,6 +86,11 @@ public class MyGame extends ApplicationAdapter {
         gameMusic = Gdx.audio.newMusic(Gdx.files.internal(FUN_MUSIC ? "battle_sound_fun.mp3" : "battle_sound.wav"));
         gameMusic.setLooping(true);
     }
+
+
+    /* -------------------------------------------------------------------------- */
+    /*                                GAME SETTERS                                */
+    /* -------------------------------------------------------------------------- */
 
     private void setCharacters() {
         int random = (int) (Math.random() * platforms.length);
@@ -93,16 +120,88 @@ public class MyGame extends ApplicationAdapter {
         dynamicBackground = backgrounds[currentBackgroundIndex];
     }
 
+    /* -------------------------------------------------------------------------- */
+    /*                                   BUTTONS                                  */
+    /* -------------------------------------------------------------------------- */
+
+    private void setInputProcessorEnabled(boolean enabled) {
+        if (enabled) {
+            Gdx.input.setInputProcessor(stage);
+        } else {
+            Gdx.input.setInputProcessor(null);
+        }
+    }
+
+    private TextButtonStyle createTextButtonStyle() {
+        Skin skin = new Skin();
+        BitmapFont font = new BitmapFont();
+        skin.add("default", font);
+
+        TextButtonStyle textButtonStyle = new TextButtonStyle();
+        textButtonStyle.font = skin.getFont("default");
+        textButtonStyle.fontColor = Color.WHITE;
+        textButtonStyle.overFontColor = Color.LIGHT_GRAY;
+        textButtonStyle.downFontColor = Color.DARK_GRAY;
+
+        return textButtonStyle;
+    }
+
+    /* ------------------------------- PLAY BUTTON ------------------------------ */
+
     private void setPlayButton() {
         stage = new Stage(new ScreenViewport());
         createPlayButton();
         Gdx.input.setInputProcessor(stage);
     }
 
-    private void setBackgroundButtons() {
-        TextButton prevBackgroundButton = createTriangleButton(true);
+    private void createPlayButton() {
+        if (gameStarted || winner != null) {
+            return;
+        }
+        TextButtonStyle textButtonStyle = createTextButtonStyle();
+
+        playButton = new TextButton("Jouer", textButtonStyle);
+        playButton.setPosition((float) Gdx.graphics.getWidth() / 2 - playButton.getWidth() / 2, (float) Gdx.graphics.getHeight() / 2 - playButton.getHeight() / 2);
+
+        playButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                gameStarted = true;
+                menuMusic.stop();
+                gameMusic.play();
+                reset();
+                playButton.remove();
+                prevBackgroundButton.remove();
+                nextBackgroundButton.remove();
+                setInputProcessorEnabled(false);
+            }
+        });
+
+        stage.addActor(playButton);
+    }
+
+    private void renderPlayButton() {
+        float height = (float) menuButtonShape.getHeight() / 8;
+        float width = (float) menuButtonShape.getWidth() / 8;
+        batch.draw(menuButtonShape, ((float) Gdx.graphics.getWidth() / 2) - (width / 2), ((float) Gdx.graphics.getHeight() / 2) - (height / 2), width, height);
+    }
+
+    /* ---------------------------- BACKGROUND BUTTON --------------------------- */
+
+    private TextButton createSelectorButton(boolean isLeft) {
+        TextButtonStyle textButtonStyle = createTextButtonStyle();
+
+        String buttonText = isLeft ? "<" : ">";
+        return new TextButton(buttonText, textButtonStyle);
+    }
+
+    private void setBackgroundSelectorButtons() {
+        if (gameStarted || winner != null) {
+            return;
+        }
+        prevBackgroundButton = createSelectorButton(true);
         prevBackgroundButton.setPosition(playButton.getX() - prevBackgroundButton.getWidth() - 30, playButton.getY());
-        TextButton nextBackgroundButton = createTriangleButton(false);
+        nextBackgroundButton = createSelectorButton(false);
         nextBackgroundButton.setPosition(playButton.getX() + playButton.getWidth() + 30, playButton.getY());
 
         prevBackgroundButton.addListener(new ClickListener() {
@@ -131,55 +230,144 @@ public class MyGame extends ApplicationAdapter {
         stage.addActor(nextBackgroundButton);
     }
 
-    private TextButton createTriangleButton(boolean isLeft) {
+    /* ------------------------------ RESET BUTTON ------------------------------ */
+
+    private void createResetButton() {
+        if (gameStarted || winner == null) {
+            return;
+        }
+
         TextButtonStyle textButtonStyle = createTextButtonStyle();
+        homeButton = new TextButton("Menu", textButtonStyle);
+        homeButton.setPosition((float) Gdx.graphics.getWidth() / 2 - homeButton.getWidth() / 2, (float) Gdx.graphics.getHeight() / 2 - homeButton.getHeight() / 2);
 
-        String buttonText = isLeft ? "<" : ">";
-        return new TextButton(buttonText, textButtonStyle);
-    }
-
-    private void createPlayButton() {
-        TextButtonStyle textButtonStyle = createTextButtonStyle();
-
-        playButton = new TextButton("Jouer", textButtonStyle);
-        playButton.setPosition((float) Gdx.graphics.getWidth() / 2 - playButton.getWidth() / 2, (float) Gdx.graphics.getHeight() / 2 - playButton.getHeight() / 2);
-
-        playButton.addListener(new ClickListener() {
+        homeButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                gameStarted = true;
+                gameStarted = false;
+                winner = null;
                 menuMusic.stop();
                 gameMusic.play();
                 reset();
-                playButton.remove();
+                homeButton.remove();
             }
         });
 
-        stage.addActor(playButton);
+        stage.addActor(homeButton);
     }
 
-    private TextButtonStyle createTextButtonStyle() {
-        Skin skin = new Skin();
-        BitmapFont font = new BitmapFont();
-        skin.add("default", font);
+    /* -------------------------------------------------------------------------- */
+    /*                                GAME UPDATES                                */
+    /* -------------------------------------------------------------------------- */
 
-        TextButtonStyle textButtonStyle = new TextButtonStyle();
-        textButtonStyle.font = skin.getFont("default");
-        textButtonStyle.fontColor = Color.WHITE;
-        textButtonStyle.overFontColor = Color.LIGHT_GRAY;
-        textButtonStyle.downFontColor = Color.DARK_GRAY;
+    // setWinner determines the winner of the game from the loser
+    private void setWinner(Character loser) {
+        this.winner = loser == characters[0] ? characters[1] : characters[0];
+        setInputProcessorEnabled(true);
+        createResetButton();
+    }
 
-        return textButtonStyle;
+    private void kill(Character character) {
+        character.kill();
+        explode = new Explode((int) character.getPositionX(), (int) character.getPositionY());
+        explode.activate();
+        if (character.getLives() <= 0) {
+            gameStarted = false;
+            setWinner(character);
+            gameMusic.stop();
+            menuMusic.play();
+        }
+    }
+
+    private void killPlayersHitByProjectiles() {
+        States state = new States(characters);
+        for (Character hc : state.getCharactersHitByProjectile()) {
+            kill(hc);
+            int random = (int) (Math.random() * 5);
+            hc.setSpawn(platforms[random].getSpawnX(CHARACTER_WIDTH), platforms[random].getSpawnY());
+        }
+        // also clear projectiles that hit together
+        state.clear();
+    }
+
+    private void killPlayersWhoFelt() {
+        for (Character c : characters) {
+            if (c.getPositionY() <= 0) {
+                kill(c);
+                int random = (int) (Math.random() * 5);
+                c.setSpawn(platforms[random].getSpawnX(CHARACTER_WIDTH), platforms[random].getSpawnY());
+            }
+        }
+    }
+
+    private void updateCharacters(float dt) {
+        for (Character c : characters) {
+            c.update(dt, platforms);
+        }
+
+        killPlayersHitByProjectiles();
+        killPlayersWhoFelt();
     }
 
     private void reset() {
         setCharacters();
         createPlayButton();
+        setBackgroundSelectorButtons();
         if (explode != null && explode.isActive()) {
             explode = null;
         }
     }
 
+    private void updateGamePage(float dt) {
+        updateExplosion(dt);
+        updateCharacters(dt);
+    }
+
+    private void updateExplosion(float dt) {
+        if (explode != null && explode.isActive()) {
+            explode.update(dt);
+        }
+    }
+
+    /* -------------------------------------------------------------------------- */
+    /*                                   RENDERS                                  */
+    /* -------------------------------------------------------------------------- */
+
+    private void renderMenuPage(float dt) {
+        renderBackground(dt);
+        renderPlayButton();
+        renderPlayerControls(player1controls, false);
+        renderPlayerControls(player2controls, true);
+    }
+
+    private void displayWinner() {
+        if (winner == null) {
+            return;
+        }
+
+        batch.draw(winnerCup, ((float) Gdx.graphics.getWidth() / 2) - (winnerCup.getWidth() / 2), ((float) Gdx.graphics.getHeight() / 2) + homeButton.getHeight() + 50 + winner.getHeight(), winnerCup.getWidth(), winnerCup.getHeight());
+        batch.draw(winner.getTexture(), ((float) Gdx.graphics.getWidth() / 2) - (winner.getWidth() / 2), ((float) Gdx.graphics.getHeight() / 2) + homeButton.getHeight() + 20, winner.getWidth(), winner.getHeight());
+    }
+
+    private void renderEndPage(float dt) {
+        renderBackground(dt);
+        displayWinner();
+        stage.act(dt);
+        stage.draw();
+    }
+
+    private void renderGamePage(float dt) {
+        renderBackground(dt);
+        renderPlatforms(dt);
+        renderExplosion();
+        renderCharacters();
+    }
+
+    private void renderCharacters() {
+        for (Character c : characters) {
+            c.render(batch, Gdx.graphics.getWidth());
+        }
+    }
 
     private void renderBackground(float dt) {
         elapsed += dt * 0.8;
@@ -188,17 +376,10 @@ public class MyGame extends ApplicationAdapter {
         batch.draw(dynamicBackground.getKeyFrame(elapsed), 0f, 0f, screenWidth, screenHeight);
     }
 
-    private void renderBackgroundMenu(float dt) {
-        renderBackground(dt);
-        renderPlayButton();
-        renderPlayerControls(player1controls, false);
-        renderPlayerControls(player2controls, true);
-    }
-
-    private void renderPlayButton() {
-        float height = (float) menuButtonShape.getHeight() / 8;
-        float width = (float) menuButtonShape.getWidth() / 8;
-        batch.draw(menuButtonShape, ((float) Gdx.graphics.getWidth() / 2) - (width / 2), ((float) Gdx.graphics.getHeight() / 2) - (height / 2), width, height);
+    private void renderExplosion() {
+        if (explode != null && explode.isActive()) {
+            explode.render(batch);
+        }
     }
 
     private void renderPlayerControls(Texture playercontrols, boolean isLeft) {
@@ -217,80 +398,9 @@ public class MyGame extends ApplicationAdapter {
         }
     }
 
-    private void killPlayersHitByProjectiles() {
-        States state = new States(characters);
-        for (Character hc : state.getCharactersHitByProjectile()) {
-            hc.kill();
-            explode = new Explode((int) hc.getPositionX(), (int) hc.getPositionY());
-            explode.activate();
-            if (hc.getLives() <= 0) {
-                gameStarted = false;
-                gameMusic.stop();
-                menuMusic.play();
-                return;
-            }
-            int random = (int) (Math.random() * 5);
-            hc.setSpawn(platforms[random].getSpawnX(CHARACTER_WIDTH), platforms[random].getSpawnY());
-        }
-        // also clear projectiles that hit together
-        state.clear();
-    }
-
-    private void killPlayersWhoFelt() {
-        for (Character c : characters) {
-            if (c.getPositionY() <= 0) {
-                c.kill();
-                explode = new Explode((int) c.getPositionX(), (int) c.getPositionY());
-                explode.activate();
-                if (c.getLives() <= 0) {
-                    gameStarted = false;
-                    return;
-                }
-                int random = (int) (Math.random() * 5);
-                c.setSpawn(platforms[random].getSpawnX(CHARACTER_WIDTH), platforms[random].getSpawnY());
-            }
-        }
-    }
-
-    private void updateCharacters(float dt) {
-        for (Character c : characters) {
-            c.update(dt, platforms);
-        }
-
-        killPlayersHitByProjectiles();
-        killPlayersWhoFelt();
-    }
-
-    private void renderCharacters() {
-        for (Character c : characters) {
-            c.render(batch, Gdx.graphics.getWidth());
-        }
-    }
-
-    private void updateExplosion(float dt) {
-        if (explode != null && explode.isActive()) {
-            explode.update(dt);
-        }
-    }
-
-    private void renderExplosion() {
-        if (explode != null && explode.isActive()) {
-            explode.render(batch);
-        }
-    }
-
-    @Override
-    public void create() {
-        loadTextures();
-        setPlatforms();
-        setCharacters();
-        setBackground();
-        setPlayButton();
-        setBackgroundButtons();
-        loadMusic();
-
-        batch = new SpriteBatch();
-    }
+    /* -------------------------------------------------------------------------- */
+    /*                                 GAME RENDER                                */
+    /* -------------------------------------------------------------------------- */
 
     @Override
     public void render() {
@@ -298,20 +408,22 @@ public class MyGame extends ApplicationAdapter {
         float dt = Gdx.graphics.getDeltaTime();
 
         if (gameStarted) {
-            updateExplosion(dt);
-            updateCharacters(dt);
-
+            updateGamePage(dt);
             batch.begin();
-            renderBackground(dt);
-            renderPlatforms(dt);
-            renderExplosion();
-            renderCharacters();
-
+            renderGamePage(dt);
             batch.end();
             return;
         }
+
+        if (winner != null) {
+            batch.begin();
+            renderEndPage(dt);
+            batch.end();
+            return;
+        }
+
         batch.begin();
-        renderBackgroundMenu(dt);
+        renderMenuPage(dt);
         batch.end();
         stage.act(dt);
         stage.draw();

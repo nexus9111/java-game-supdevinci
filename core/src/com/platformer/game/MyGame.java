@@ -4,6 +4,7 @@ import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.audio.Music;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
@@ -60,6 +61,9 @@ public class MyGame extends ApplicationAdapter {
 
     private Music menuMusic;
     private Music gameMusic;
+    private Sound explosionSound;
+
+    private final PlatformsGenerator pGenerator = new PlatformsGenerator();
 
     /* -------------------------------------------------------------------------- */
     /*                               INITIALIZATION                               */
@@ -89,6 +93,7 @@ public class MyGame extends ApplicationAdapter {
         menuMusic.play();
         gameMusic = Gdx.audio.newMusic(Gdx.files.internal(FUN_MUSIC ? "battle_sound_fun.mp3" : "battle_sound.wav"));
         gameMusic.setLooping(true);
+        explosionSound = Gdx.audio.newSound(Gdx.files.internal("explosion.wav"));
     }
 
     /* -------------------------------------------------------------------------- */
@@ -109,10 +114,9 @@ public class MyGame extends ApplicationAdapter {
     }
 
     private void setPlatforms() {
-        PlatformsGenerator p = new PlatformsGenerator();
-        platforms = p.getAllPlatforms(currentBackgroundIndex);
+        platforms = pGenerator.getAllPlatforms(currentBackgroundIndex);
         if (platforms.length == 0) {
-            platforms = p.getAllPlatforms(0);
+            platforms = pGenerator.getAllPlatforms(0);
         }
     }
 
@@ -275,6 +279,7 @@ public class MyGame extends ApplicationAdapter {
 
     private void kill(Character character) {
         character.kill();
+        explosionSound.play(1.0f);
         explode = new Explode((int) character.getPositionX(), (int) character.getPositionY());
         explode.activate();
         if (character.getLives() <= 0) {

@@ -1,5 +1,7 @@
 package com.platformer.game.models;
 
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -48,6 +50,8 @@ public class Character implements ICharacter {
     private float time = .0f;
     private float velocityY = 0;
 
+    private final Sound shootSound;
+
 
     public Character(String fileName, int characterWidth, int characterHeight, float characterSpeed, float percentToLeft, float percentToBottom, double scale, Controles controles, int offsetX, int offsetY, String projectileFile) {
         if (fileName == null) {
@@ -77,6 +81,8 @@ public class Character implements ICharacter {
         for (int i = 0; i < this.animation.length; i++) {
             this.animation[i] = new Animation<>(this.ANIMATION_SPEED, this.animationInstances[i]);
         }
+
+        shootSound = Gdx.audio.newSound(Gdx.files.internal("shoot.wav"));
     }
 
     public void render(SpriteBatch batch, float size) {
@@ -248,6 +254,7 @@ public class Character implements ICharacter {
 
     private void isShooting() {
         if (controles.shoot() && getRemainingProjectiles() > 0) {
+            shootSound.play(1.0f);
             projectiles.add(new Projectile(this, 45, 37, 500f, this.isLeftLooking, this.projectileFile));
         }
     }

@@ -18,6 +18,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.TextButton.TextButtonStyle;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
+import com.platformer.game.generators.PlatformsGenerator;
 import com.platformer.game.models.Character;
 import com.platformer.game.models.*;
 
@@ -29,9 +30,13 @@ public class MyGame extends ApplicationAdapter {
     private final static int BACKGROUND_COUNT = 6;
     private final static boolean FUN_MUSIC = false;
 
+    private final static int MENU_PAGE = 0;
+    private final static int GAME_PAGE = 1;
+    private final static int WINNER_PAGE = 2;
+
     private final Character[] characters = new Character[2];
-    private final Platform[] platforms = new Platform[5];
-    private final Animation<TextureRegion>[] backgrounds = new Animation[BACKGROUND_COUNT];
+    private Platform[] platforms;
+    private int currentPage = MENU_PAGE;
     private SpriteBatch batch;
     private float elapsed;
     private Explode explode;
@@ -39,7 +44,9 @@ public class MyGame extends ApplicationAdapter {
     private float platformAnimTime = 0f;
     private Skin skin;
     private Stage stage;
+    private Character winner = null;
     private int currentBackgroundIndex = 0;
+
     private Texture menuButtonShape;
     private Texture player1controls;
     private Texture player2controls;
@@ -49,8 +56,7 @@ public class MyGame extends ApplicationAdapter {
     private TextButton prevBackgroundButton;
     private TextButton nextBackgroundButton;
     private Animation<TextureRegion> dynamicBackground;
-
-    private Character winner = null;
+    private final Animation<TextureRegion>[] backgrounds = new Animation[BACKGROUND_COUNT];
 
     private Music menuMusic;
     private Music gameMusic;
@@ -105,11 +111,8 @@ public class MyGame extends ApplicationAdapter {
     }
 
     private void setPlatforms() {
-        platforms[0] = new Platform("platform.png", PLATFORM_WIDTH, PLATFORM_HEIGHT, 5, 50, 50, 5);
-        platforms[1] = new Platform("small_platform.png", 1578, 201, 10, 25, 15, 1);
-        platforms[2] = new Platform("small_platform.png", 1578, 201, 10, 25, 85, 1);
-        platforms[3] = new Platform("small_platform.png", 1578, 201, 10, 75, 85, 1);
-        platforms[4] = new Platform("small_platform.png", 1578, 201, 10, 75, 15, 1);
+        PlatformsGenerator p = new PlatformsGenerator();
+        platforms = p.getAllPlatforms(0);
     }
 
     private void setBackground() {
@@ -127,10 +130,10 @@ public class MyGame extends ApplicationAdapter {
     private void setMenuButtons() {
         stage = new Stage(new ScreenViewport());
         createPlayButton();
-        setBackgroundSelectorButtons();
+        createBackgroundSelectorButtons();
         Gdx.input.setInputProcessor(stage);
     }
-    
+
     private void setInputProcessorEnabled(boolean enabled) {
         if (enabled) {
             Gdx.input.setInputProcessor(stage);
@@ -175,13 +178,14 @@ public class MyGame extends ApplicationAdapter {
                 prevBackgroundButton.remove();
                 nextBackgroundButton.remove();
                 setInputProcessorEnabled(false);
+                currentPage = GAME_PAGE;
             }
         });
 
         stage.addActor(playButton);
     }
 
-    private void renderPlayButton() {
+    private void renderPlayButtonBox() {
         float height = (float) menuButtonShape.getHeight() / 8;
         float width = (float) menuButtonShape.getWidth() / 8;
         batch.draw(menuButtonShape, ((float) Gdx.graphics.getWidth() / 2) - (width / 2), ((float) Gdx.graphics.getHeight() / 2) - (height / 2), width, height);
@@ -196,7 +200,7 @@ public class MyGame extends ApplicationAdapter {
         return new TextButton(buttonText, textButtonStyle);
     }
 
-    private void setBackgroundSelectorButtons() {
+    private void createBackgroundSelectorButtons() {
         if (gameStarted || winner != null) {
             return;
         }
@@ -251,6 +255,7 @@ public class MyGame extends ApplicationAdapter {
                 gameMusic.play();
                 reset();
                 homeButton.remove();
+                currentPage = MENU_PAGE;
             }
         });
 
@@ -277,26 +282,27 @@ public class MyGame extends ApplicationAdapter {
             setWinner(character);
             gameMusic.stop();
             menuMusic.play();
+            this.currentPage = WINNER_PAGE;
         }
     }
 
     private void killPlayersHitByProjectiles() {
         States state = new States(characters);
-        for (Character hc : state.getCharactersHitByProjectile()) {
-            kill(hc);
-            int random = (int) (Math.random() * 5);
-            hc.setSpawn(platforms[random].getSpawnX(CHARACTER_WIDTH), platforms[random].getSpawnY());
+        for (Character hittedCharacter : state.getCharactersHitByProjectile()) {
+            kill(hittedCharacter);
+            int random = (int) (Math.random() * platforms.length);
+            hittedCharacter.setSpawn(platforms[random].getSpawnX(CHARACTER_WIDTH), platforms[random].getSpawnY());
         }
         // also clear projectiles that hit together
         state.clear();
     }
 
     private void killPlayersWhoFelt() {
-        for (Character c : characters) {
-            if (c.getPositionY() <= 0) {
-                kill(c);
-                int random = (int) (Math.random() * 5);
-                c.setSpawn(platforms[random].getSpawnX(CHARACTER_WIDTH), platforms[random].getSpawnY());
+        for (Character character : characters) {
+            if (character.getPositionY() <= 0) {
+                kill(character);
+                int random = (int) (Math.random() * platforms.length);
+                character.setSpawn(platforms[random].getSpawnX(CHARACTER_WIDTH), platforms[random].getSpawnY());
             }
         }
     }
@@ -313,7 +319,7 @@ public class MyGame extends ApplicationAdapter {
     private void reset() {
         setCharacters();
         createPlayButton();
-        setBackgroundSelectorButtons();
+        createBackgroundSelectorButtons();
         if (explode != null && explode.isActive()) {
             explode = null;
         }
@@ -335,10 +341,14 @@ public class MyGame extends ApplicationAdapter {
     /* -------------------------------------------------------------------------- */
 
     private void renderMenuPage(float dt) {
+        batch.begin();
         renderBackground(dt);
-        renderPlayButton();
+        renderPlayButtonBox();
         renderPlayerControls(player1controls, false);
         renderPlayerControls(player2controls, true);
+        stage.act(dt);
+        stage.draw();
+        batch.end();
     }
 
     private void displayWinner() {
@@ -351,17 +361,22 @@ public class MyGame extends ApplicationAdapter {
     }
 
     private void renderEndPage(float dt) {
+        batch.begin();
         renderBackground(dt);
         displayWinner();
         stage.act(dt);
         stage.draw();
+        batch.end();
     }
 
     private void renderGamePage(float dt) {
+        updateGamePage(dt);
+        batch.begin();
         renderBackground(dt);
         renderPlatforms(dt);
         renderExplosion();
         renderCharacters();
+        batch.end();
     }
 
     private void renderCharacters() {
@@ -408,26 +423,19 @@ public class MyGame extends ApplicationAdapter {
         ScreenUtils.clear(0, 0, 0, 1);
         float dt = Gdx.graphics.getDeltaTime();
 
-        if (gameStarted) {
-            updateGamePage(dt);
-            batch.begin();
-            renderGamePage(dt);
-            batch.end();
-            return;
+        switch (this.currentPage) {
+            case MENU_PAGE:
+                renderMenuPage(dt);
+                break;
+            case GAME_PAGE:
+                renderGamePage(dt);
+                break;
+            case WINNER_PAGE:
+                renderEndPage(dt);
+                break;
+            default:
+                throw new IllegalStateException("Unexpected value: " + this.currentPage);
         }
-
-        if (winner != null) {
-            batch.begin();
-            renderEndPage(dt);
-            batch.end();
-            return;
-        }
-
-        batch.begin();
-        renderMenuPage(dt);
-        batch.end();
-        stage.act(dt);
-        stage.draw();
     }
 
     @Override

@@ -123,6 +123,14 @@ public class MyGame extends ApplicationAdapter {
     /*                                   BUTTONS                                  */
     /* -------------------------------------------------------------------------- */
 
+
+    private void setMenuButtons() {
+        stage = new Stage(new ScreenViewport());
+        createPlayButton();
+        setBackgroundSelectorButtons();
+        Gdx.input.setInputProcessor(stage);
+    }
+    
     private void setInputProcessorEnabled(boolean enabled) {
         if (enabled) {
             Gdx.input.setInputProcessor(stage);
@@ -145,15 +153,8 @@ public class MyGame extends ApplicationAdapter {
         return textButtonStyle;
     }
 
-    private void setMenuButtons() {
-        stage = new Stage(new ScreenViewport());
-        createPlayButton();
-        setBackgroundSelectorButtons();
-        Gdx.input.setInputProcessor(stage);
-    }
-
     /* ------------------------------- PLAY BUTTON ------------------------------ */
-    
+
     private void createPlayButton() {
         if (gameStarted || winner != null) {
             return;

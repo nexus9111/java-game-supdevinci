@@ -17,6 +17,7 @@ public class Character implements ICharacter {
     private final int MAX_PROJECTILES_COUNT = 5;
     private final int MAX_JUMP_COUNT = 2;
     private final int POSSIBLE_DIRECTIONS = 4;
+    
     // controls
     private final Controles controles;
     private final int height;
@@ -25,6 +26,7 @@ public class Character implements ICharacter {
     private final String projectileFile;
     private final float speed;
     private final int width;
+
     // textures
     private final Texture texture;
     private final Texture heartTexture;
@@ -32,6 +34,7 @@ public class Character implements ICharacter {
     private final Animation<TextureRegion>[] animation;
     private final List<Projectile> projectiles = new java.util.ArrayList<>();
     private int LIVES_COUNT = 5;
+
     // variables
     private float positionY;
     private float positionX;

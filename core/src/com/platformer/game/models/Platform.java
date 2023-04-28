@@ -57,9 +57,6 @@ public class Platform {
         return this.height;
     }
 
-    public float getPositionX() {
-        return this.positionX;
-    }
 
     public void render(SpriteBatch batch, float time) {
         TextureRegion txrCurrentPlatform = this.animPlatform[(int) (time / this.PLATFORM_ANIM_SPEED) % this.PLATFORM_FRAME].getKeyFrame(time, true);

@@ -26,8 +26,6 @@ import com.platformer.game.models.*;
 public class MyGame extends ApplicationAdapter {
     private final static float CHARACTER_SPEED = 150f;
     private final static int CHARACTER_WIDTH = 64;
-    private final static int PLATFORM_WIDTH = 1998;
-    private final static int PLATFORM_HEIGHT = 917;
     private final static int BACKGROUND_COUNT = 6;
     private final static boolean FUN_MUSIC = false;
 
@@ -122,7 +120,8 @@ public class MyGame extends ApplicationAdapter {
 
     private void setBackground() {
         for (int i = 0; i < BACKGROUND_COUNT; i++) {
-            backgrounds[i] = GifDecoder.loadGIFAnimation(Animation.PlayMode.LOOP, Gdx.files.internal("background" + (i + 1) + ".gif").read());
+            String lowCostStr = String.format("background%d.gif", i + 1); // use instead of "a" + "b" + "c"
+            backgrounds[i] = GifDecoder.loadGIFAnimation(Animation.PlayMode.LOOP, Gdx.files.internal(lowCostStr).read());
         }
         dynamicBackground = backgrounds[currentBackgroundIndex];
     }
@@ -139,11 +138,12 @@ public class MyGame extends ApplicationAdapter {
     }
 
     private void setInputProcessorEnabled(boolean enabled) {
-        if (enabled) {
-            Gdx.input.setInputProcessor(stage);
-        } else {
-            Gdx.input.setInputProcessor(null);
-        }
+//        if (enabled) {
+//            Gdx.input.setInputProcessor(stage);
+//            return;
+//        }
+//        Gdx.input.setInputProcessor(null);
+        Gdx.input.setInputProcessor(enabled ? stage : null);
     }
 
     private TextButtonStyle createTextButtonStyle() {
@@ -263,6 +263,8 @@ public class MyGame extends ApplicationAdapter {
 
         stage.addActor(homeButton);
     }
+
+    // todo: change with cb function
 
     /* -------------------------------------------------------------------------- */
     /*                                GAME UPDATES                                */
